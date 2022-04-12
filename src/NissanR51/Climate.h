@@ -6,8 +6,35 @@
 
 namespace NissanR51 {
 
+// Tracks temperatures reported by the climate control system.
+// Handles CAN frame ID 0x54A.
+struct ClimateTemperature {
+    // Measurement units.
+    enum Units : uint8_t {
+        UNITS_METRIC,
+        UNITS_US,
+    };
+
+    // The temperature units the system is using.
+    enum Units units;
+    // Requested driver temperature.
+    uint8_t driver_temp;
+    // Requested passenger temperature.
+    uint8_t passenger_temp;
+    // Current outside temperature.
+    uint8_t outside_temp;
+
+    // Construct an empty temperature struct.
+    ClimateTemperature() : units(UNITS_METRIC), driver_temp(0),
+            passenger_temp(0), outside_temp(0) {}
+
+    // Handle a 0x54A climate temperature frame. Returns true if the climate
+    // state changed as a result of handling the frame.
+    bool handle(const Canny::Frame& frame);
+};
+
 // Tracks climate control state from CAN frames.
-struct ClimateState {
+struct ClimateSystem {
     // Climate system operational state.
     enum System : uint8_t {
         SYSTEM_INIT,
@@ -34,18 +61,10 @@ struct ClimateState {
         VENTS_WINDSHIELD,
     };
 
-    // Measurement units.
-    enum Units : uint8_t {
-        UNITS_METRIC,
-        UNITS_US,
-    };
-
     // Current system state.
     enum System system;
     // Current vent state.
     enum Vents vents;
-    // The temperature units the system is using.
-    enum Units units;
     // True if the A/C compressor is being requested.
     bool ac;
     // True if the system is in dual zone mode. Dual zone allows the driver and
@@ -55,16 +74,9 @@ struct ClimateState {
     bool recirculate;
     // Current fan speed. Values are from 0 (off) to 7 (max).
     uint8_t fan_speed;
-    // Requested driver temperature.
-    uint8_t driver_temp;
-    // Requested passenger temperature.
-    uint8_t passenger_temp;
-    // Current outside temperature.
-    uint8_t outside_temp;
 
-    ClimateState() : system(SYSTEM_OFF), vents(VENTS_CLOSED), units(UNITS_METRIC),
-            ac(false), dual(false), recirculate(false), fan_speed(0),
-            driver_temp(0), passenger_temp(0), outside_temp(0) {}
+    ClimateSystem() : system(SYSTEM_OFF), vents(VENTS_CLOSED),
+            ac(false), dual(false), recirculate(false), fan_speed(0) {}
 
     // Handle a frame. Returns true if the climate state changed as a
     // result of handling the frame.

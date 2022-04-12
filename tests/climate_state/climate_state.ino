@@ -4,28 +4,29 @@
 
 using namespace aunit;
 using ::Canny::Frame;
-using ::NissanR51::ClimateState;
+using ::NissanR51::ClimateSystem;
+using ::NissanR51::ClimateTemperature;
 
-test(ClimateStateTest, Handle54A) {
+test(ClimateTemperatureTest, Handle54A) {
     Frame f(0x54A, 0, {0x3C, 0x3E, 0x7F, 0x80, 0x3C, 0x41, 0x00, 0x58});
     
-    ClimateState state;
+    ClimateTemperature state;
     assertTrue(state.handle(f));
-    assertEqual(state.units, ClimateState::UNITS_US);
+    assertEqual(state.units, ClimateTemperature::UNITS_US);
     assertEqual(state.driver_temp, 60);
     assertEqual(state.passenger_temp, 65);
     assertEqual(state.outside_temp, 88);
     assertFalse(state.handle(f));
 }
 
-test(ClimateStateTest, Handle54BOff) {
+test(ClimateSystemTest, Handle54BOff) {
     Frame f(0x54B, 0, {0xF2, 0x00, 0x00, 0x24, 0x00, 0x00, 0x00, 0x02});
 
-    ClimateState state;
-    state.system = ClimateState::SYSTEM_MANUAL;
+    ClimateSystem state;
+    state.system = ClimateSystem::SYSTEM_MANUAL;
     assertTrue(state.handle(f));
-    assertEqual(state.system, ClimateState::SYSTEM_OFF);
-    assertEqual(state.vents, ClimateState::VENTS_CLOSED);
+    assertEqual(state.system, ClimateSystem::SYSTEM_OFF);
+    assertEqual(state.vents, ClimateSystem::VENTS_CLOSED);
     assertEqual(state.ac, false);
     assertEqual(state.dual, false);
     assertEqual(state.recirculate, false);
@@ -33,13 +34,13 @@ test(ClimateStateTest, Handle54BOff) {
     assertFalse(state.handle(f));
 }
 
-test(ClimateStateTest, Handle54BAuto) {
+test(ClimateSystemTest, Handle54BAuto) {
     Frame f(0x54B, 0, {0x59, 0x8C, 0x05, 0x24, 0x00, 0x00, 0x00, 0x02});
 
-    ClimateState state;
+    ClimateSystem state;
     assertTrue(state.handle(f));
-    assertEqual(state.system, ClimateState::SYSTEM_AUTO);
-    assertEqual(state.vents, ClimateState::VENTS_FEET);
+    assertEqual(state.system, ClimateSystem::SYSTEM_AUTO);
+    assertEqual(state.vents, ClimateSystem::VENTS_FEET);
     assertEqual(state.ac, true);
     assertEqual(state.dual, false);
     assertEqual(state.recirculate, false);
@@ -47,13 +48,13 @@ test(ClimateStateTest, Handle54BAuto) {
     assertFalse(state.handle(f));
 }
 
-test(ClimateStateTest, Handle54BAutoDual) {
+test(ClimateSystemTest, Handle54BAutoDual) {
     Frame f(0x54B, 0, {0x59, 0x08, 0x02, 0xE2, 0x00, 0x00, 0x00, 0x02});
 
-    ClimateState state;
+    ClimateSystem state;
     assertTrue(state.handle(f));
-    assertEqual(state.system, ClimateState::SYSTEM_AUTO);
-    assertEqual(state.vents, ClimateState::VENTS_FACE_FEET);
+    assertEqual(state.system, ClimateSystem::SYSTEM_AUTO);
+    assertEqual(state.vents, ClimateSystem::VENTS_FACE_FEET);
     assertEqual(state.ac, true);
     assertEqual(state.dual, true);
     assertEqual(state.recirculate, false);
@@ -61,13 +62,13 @@ test(ClimateStateTest, Handle54BAutoDual) {
     assertFalse(state.handle(f));
 }
 
-test(ClimateStateTest, Handle54BManual) {
+test(ClimateSystemTest, Handle54BManual) {
     Frame f(0x54B, 0, {0x5A, 0x08, 0x02, 0xD2, 0x00, 0x00, 0x00, 0x00});
 
-    ClimateState state;
+    ClimateSystem state;
     assertTrue(state.handle(f));
-    assertEqual(state.system, ClimateState::SYSTEM_MANUAL);
-    assertEqual(state.vents, ClimateState::VENTS_FACE_FEET);
+    assertEqual(state.system, ClimateSystem::SYSTEM_MANUAL);
+    assertEqual(state.vents, ClimateSystem::VENTS_FACE_FEET);
     assertEqual(state.ac, true);
     assertEqual(state.dual, true);
     assertEqual(state.recirculate, true);
@@ -75,13 +76,13 @@ test(ClimateStateTest, Handle54BManual) {
     assertFalse(state.handle(f));
 }
 
-test(ClimateStateTest, Handle54BDefrost) {
+test(ClimateSystemTest, Handle54BDefrost) {
     Frame f(0x54B, 0, {0x5A, 0x34, 0x06, 0x24, 0x00, 0x00, 0x00, 0x02});
 
-    ClimateState state;
+    ClimateSystem state;
     assertTrue(state.handle(f));
-    assertEqual(state.system, ClimateState::SYSTEM_DEFROST);
-    assertEqual(state.vents, ClimateState::VENTS_WINDSHIELD);
+    assertEqual(state.system, ClimateSystem::SYSTEM_DEFROST);
+    assertEqual(state.vents, ClimateSystem::VENTS_WINDSHIELD);
     assertEqual(state.ac, true);
     assertEqual(state.dual, false);
     assertEqual(state.recirculate, false);

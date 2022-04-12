@@ -7,6 +7,18 @@ namespace NissanR51 {
 using namespace aunit;
 using ::Canny::Frame;
 
+test(ClimateTemperatureStateTest, IgnoreIncorrectID) {
+    Frame f(0x54C, 0, {0x3C, 0x3E, 0x7F, 0x80, 0x3C, 0x41, 0x00, 0x58});
+    ClimateTemperatureState state;
+    assertFalse(state.handle(f));
+}
+
+test(ClimateTemperatureStateTest, IgnoreIncorrectSize) {
+    Frame f(0x54A, 0, {0x3C, 0x3E, 0x7F, 0x80, 0x3C, 0x41});
+    ClimateTemperatureState state;
+    assertFalse(state.handle(f));
+}
+
 test(ClimateTemperatureStateTest, HandleTemperatures) {
     Frame f(0x54A, 0, {0x3C, 0x3E, 0x7F, 0x80, 0x3C, 0x41, 0x00, 0x58});
     

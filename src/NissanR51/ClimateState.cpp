@@ -30,7 +30,7 @@ enum Mode : uint8_t {
 }  // namespace
 
 bool ClimateTemperatureState::handle(const Canny::Frame& frame) {
-    if (frame.size() != 8) {
+    if (frame.id() != 0x54A || frame.size() != 8) {
         return false;
     }
     bool changed = false;
@@ -43,7 +43,7 @@ bool ClimateTemperatureState::handle(const Canny::Frame& frame) {
 }
 
 bool ClimateSystemState::handle(const Canny::Frame& frame) {
-    if (frame.size() != 8) {
+    if (frame.id() != 0x54B || frame.size() != 8) {
         return false;
     }
     bool changed = false;

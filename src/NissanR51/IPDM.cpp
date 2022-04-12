@@ -3,14 +3,7 @@
 #include <Arduino.h>
 #include <Canny.h>
 #include "Binary.h"
-
-#define SET_ON_CHANGE(property, value) ({\
-    auto tmp = value;\
-    if (property != tmp) {\
-        property = tmp;\
-        changed = true;\
-    }\
-})
+#include "Macros.h"
 
 namespace NissanR51 {
 

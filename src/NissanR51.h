@@ -3,6 +3,7 @@
 
 #include <NissanR51/ClimateControl.h>
 #include <NissanR51/ClimateState.h>
+#include <NissanR51/ECM.h>
 #include <NissanR51/IPDM.h>
 
 #endif  // _NISSAN_R51_H_

@@ -1,5 +1,5 @@
-#ifndef _NISSAN_R51_CLIMATE_H_
-#define _NISSAN_R51_CLIMATE_H_
+#ifndef _NISSAN_R51_CLIMATE_STATE_H_
+#define _NISSAN_R51_CLIMATE_STATE_H_
 
 #include <Arduino.h>
 #include <Canny.h>
@@ -8,7 +8,7 @@ namespace NissanR51 {
 
 // Tracks temperatures reported by the climate control system.
 // Handles CAN frame ID 0x54A.
-struct ClimateTemperature {
+struct ClimateTemperatureState {
     // Measurement units.
     enum Units : uint8_t {
         UNITS_METRIC,
@@ -25,7 +25,7 @@ struct ClimateTemperature {
     uint8_t outside_temp;
 
     // Construct an empty temperature struct.
-    ClimateTemperature() : units(UNITS_METRIC), driver_temp(0),
+    ClimateTemperatureState() : units(UNITS_METRIC), driver_temp(0),
             passenger_temp(0), outside_temp(0) {}
 
     // Handle a 0x54A climate temperature frame. Returns true if the state
@@ -35,7 +35,7 @@ struct ClimateTemperature {
 
 // Tracks the system state reported by the climate control system.
 // Handles CAN frame ID 0x54B.
-struct ClimateSystem {
+struct ClimateSystemState {
     // Climate system operational state.
     enum System : uint8_t {
         SYSTEM_INIT,
@@ -76,7 +76,7 @@ struct ClimateSystem {
     // Current fan speed. Values are from 0 (off) to 7 (max).
     uint8_t fan_speed;
 
-    ClimateSystem() : system(SYSTEM_OFF), vents(VENTS_CLOSED),
+    ClimateSystemState() : system(SYSTEM_OFF), vents(VENTS_CLOSED),
             ac(false), dual(false), recirculate(false), fan_speed(0) {}
 
     // Handle a 0x54B climate system frame. Returns true if the state changed
@@ -86,4 +86,4 @@ struct ClimateSystem {
 
 }  // namespace NissanR51
 
-#endif  // _NISSAN_R51_CLIMATE_H_
+#endif  // _NISSAN_R51_CLIMATE_STATE_H_

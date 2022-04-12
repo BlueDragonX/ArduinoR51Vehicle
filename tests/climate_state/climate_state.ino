@@ -2,10 +2,10 @@
 #include <AUnit.h>
 #include <NissanR51.h>
 
+namespace NissanR51 {
+
 using namespace aunit;
 using ::Canny::Frame;
-using ::NissanR51::ClimateSystemState;
-using ::NissanR51::ClimateTemperatureState;
 
 test(ClimateTemperatureStateTest, HandleTemperatures) {
     Frame f(0x54A, 0, {0x3C, 0x3E, 0x7F, 0x80, 0x3C, 0x41, 0x00, 0x58});
@@ -89,6 +89,8 @@ test(ClimateSystemStateTest, HandleDefrost) {
     assertFalse(state.handle(f));
 }
 
+}  // namespace NissanR51
+
 // Test boilerplate.
 void setup() {
 #ifdef ARDUINO
@@ -99,6 +101,6 @@ void setup() {
 }
 
 void loop() {
-    TestRunner::run();
+    aunit::TestRunner::run();
     delay(1);
 }

@@ -14,10 +14,9 @@ bool isInit(const Canny::Frame& frame) {
 }  // namespace
 
 ClimateSystemControl::ClimateSystemControl(bool ready) : frame_(0x540, 0, 8), available_(true) {
+    frame_.data()[0] = 0x80;
     if (ready) {
         this->ready();
-    } else {
-        frame_.data()[0] = 0x80;
     }
 }
 
@@ -121,10 +120,9 @@ void ClimateSystemControl::decPassengerTemp() {
 }
 
 ClimateFanControl::ClimateFanControl(bool ready) : frame_(0x541, 0, 8), available_(true) {
+    frame_.data()[0] = 0x80;
     if (ready) {
         this->ready();
-    } else {
-        frame_.data()[0] = 0x80;
     }
 }
 

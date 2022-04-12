@@ -28,12 +28,12 @@ test(ECMCoolantStateTest, MinTemp) {
     assertFalse(state.handle(f));
 }
 
-test(ECMCoolantStateTest, ZeroTemp) {
-    Frame f(0x551, 0, {0x28, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+test(ECMCoolantStateTest, PositiveTemp) {
+    Frame f(0x551, 0, {0x29, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
     ECMCoolantState state;
     assertTrue(state.handle(f));
-    assertEqual(state.coolant_temp(), 0);
+    assertEqual(state.coolant_temp(), 1);
     assertFalse(state.handle(f));
 }
 
@@ -43,6 +43,45 @@ test(ECMCoolantStateTest, MaxTemp) {
     ECMCoolantState state;
     assertTrue(state.handle(f));
     assertEqual(state.coolant_temp(), 215);
+    assertFalse(state.handle(f));
+}
+
+test(ECMOilStateTest, IgnoreIncorrectID) {
+    Frame f(0x581, 0, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+    ECMOilState state;
+    assertFalse(state.handle(f));
+}
+
+test(ECMOilStateTest, IgnoreIncorrectSize) {
+    Frame f(0x580, 0, {});
+    ECMOilState state;
+    assertFalse(state.handle(f));
+}
+
+test(ECMOilStateTest, MinTemp) {
+    Frame f(0x580, 0, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+
+    ECMOilState state;
+    assertTrue(state.handle(f));
+    assertEqual(state.oil_temp(), -40);
+    assertFalse(state.handle(f));
+}
+
+test(ECMOilStateTest, PositiveTemp) {
+    Frame f(0x580, 0, {0x00, 0x00, 0x00, 0x00, 0x29, 0x00, 0x00, 0x00});
+
+    ECMOilState state;
+    assertTrue(state.handle(f));
+    assertEqual(state.oil_temp(), 1);
+    assertFalse(state.handle(f));
+}
+
+test(ECMOilStateTest, MaxTemp) {
+    Frame f(0x580, 0, {0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00});
+
+    ECMOilState state;
+    assertTrue(state.handle(f));
+    assertEqual(state.oil_temp(), 215);
     assertFalse(state.handle(f));
 }
 

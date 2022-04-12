@@ -28,12 +28,13 @@ struct ClimateTemperature {
     ClimateTemperature() : units(UNITS_METRIC), driver_temp(0),
             passenger_temp(0), outside_temp(0) {}
 
-    // Handle a 0x54A climate temperature frame. Returns true if the climate
-    // state changed as a result of handling the frame.
+    // Handle a 0x54A climate temperature frame. Returns true if the state
+    // changed as a result of handling the frame.
     bool handle(const Canny::Frame& frame);
 };
 
-// Tracks climate control state from CAN frames.
+// Tracks the system state reported by the climate control system.
+// Handles CAN frame ID 0x54B.
 struct ClimateSystem {
     // Climate system operational state.
     enum System : uint8_t {
@@ -78,8 +79,8 @@ struct ClimateSystem {
     ClimateSystem() : system(SYSTEM_OFF), vents(VENTS_CLOSED),
             ac(false), dual(false), recirculate(false), fan_speed(0) {}
 
-    // Handle a frame. Returns true if the climate state changed as a
-    // result of handling the frame.
+    // Handle a 0x54B climate system frame. Returns true if the state changed
+    // as a result of handling the frame.
     bool handle(const Canny::Frame& frame);
 };
 

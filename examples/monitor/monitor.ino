@@ -9,7 +9,6 @@ using namespace NissanR51;
 ClimateSystemState climate_system;
 ClimateTemperatureState climate_temp;
 ECMCoolantState coolant;
-ECMOilState oil;
 IPDMState ipdm;
 TirePressureState tires;
 
@@ -39,7 +38,7 @@ void loop() {
     if (climate_system.handle(frame) | climate_temp.handle(frame)) {
         printClimate();
     }
-    if (coolant.handle(frame) | oil.handle(frame)) {
+    if (coolant.handle(frame)) {
         printEcm();
     }
     if (ipdm.handle(frame)) {
@@ -132,13 +131,6 @@ void printEcm() {
         Serial.print(" ");
     }
     Serial.print(coolant.coolant_temp());
-    Serial.print("C / ");
-    if (oil.oil_temp() < 10) {
-        Serial.print("  ");
-    } else if (oil.oil_temp() < 100) {
-        Serial.print(" ");
-    }
-    Serial.print(oil.oil_temp());
     Serial.println("C");
 }
 

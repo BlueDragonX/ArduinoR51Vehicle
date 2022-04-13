@@ -14,7 +14,7 @@ IPDMState ipdm;
 TirePressureState tires;
 
 Canny::Error err;
-Canny::Frame frame(8);
+Canny::Frame frame(64);
 
 void printClimate();
 void printEcm();
@@ -24,7 +24,7 @@ void printTires();
 void setup() {
     Serial.begin(115200);
     while (!Serial) { delay(100); }
-    if (!CAN.begin(Canny::CAN20_250K)) {
+    if (!CAN.begin(Canny::CAN20_500K)) {
         Serial.println("failed to setup CAN");
         while (true) { delay(1000); }
     }
@@ -32,8 +32,7 @@ void setup() {
 }
 
 void loop() {
-    err = CAN.read(&frame);
-    if (err != Canny::ERR_OK) {
+    if (CAN.read(&frame) != Canny::ERR_OK) {
         return;
     }
 
@@ -144,7 +143,7 @@ void printEcm() {
 }
 
 void printOnOff(bool val) {
-    Serial.println(val ? "on " : "off");
+    Serial.print(val ? "on " : "off");
 }
 
 void printIpdm() {
@@ -158,9 +157,9 @@ void printIpdm() {
     }
     Serial.print(" rl=");
     printOnOff(ipdm.running_lights());
-    Serial.println(" def=");
+    Serial.print(" def=");
     printOnOff(ipdm.defog());
-    Serial.println(" ac=");
+    Serial.print(" ac=");
     printOnOff(ipdm.ac_compressor());
     Serial.println();
 }

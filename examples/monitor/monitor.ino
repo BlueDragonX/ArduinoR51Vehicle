@@ -24,7 +24,7 @@ void printTires();
 void setup() {
     Serial.begin(115200);
     while (!Serial) { delay(100); }
-    if (CAN.begin(Canny::CAN20_250K) != Canny::ERR_OK) {
+    if (!CAN.begin(Canny::CAN20_250K)) {
         Serial.println("failed to setup CAN");
         while (true) { delay(1000); }
     }

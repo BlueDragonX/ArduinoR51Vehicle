@@ -16,6 +16,7 @@ bool IPDMState::handle(const Canny::Frame& frame) {
     SET_ON_CHANGE(high_beams_, getBit(frame.data(), 1, 4));
     SET_ON_CHANGE(low_beams_, getBit(frame.data(), 1, 5));
     SET_ON_CHANGE(running_lights_, getBit(frame.data(), 1, 6));
+    SET_ON_CHANGE(fog_lights_, getBit(frame.data(), 1, 3));
     SET_ON_CHANGE(ac_compressor_, getBit(frame.data(), 1, 7));
     return changed;
 }

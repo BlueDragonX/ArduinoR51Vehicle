@@ -11,7 +11,7 @@ namespace NissanR51 {
 class IPDMState : public Handler {
     public:
         IPDMState() : defog_(false), high_beams_(false), low_beams_(false),
-            running_lights_(false), ac_compressor_(false) {}
+            running_lights_(false), fog_lights_(false), ac_compressor_(false) {}
 
         // Handle a 0x625 IPDM state frame. Returns true if the state changed
         // as a result of handling the frame.
@@ -29,6 +29,9 @@ class IPDMState : public Handler {
         // Return true if the running lights are on.
         bool running_lights() const { return running_lights_; }
 
+        // Return true if the fog lights are on.
+        bool fog_lights() const { return fog_lights_; }
+
         // Return true if the A/C compressor clutch is active.
         bool ac_compressor() const { return ac_compressor_; }
 
@@ -37,6 +40,7 @@ class IPDMState : public Handler {
         bool high_beams_;
         bool low_beams_;
         bool running_lights_;
+        bool fog_lights_;
         bool ac_compressor_;
 };
 

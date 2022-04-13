@@ -139,7 +139,7 @@ void printOnOff(bool val) {
 }
 
 void printIpdm() {
-    Serial.print("ipdm: hl=");
+    Serial.print("ipdm: headlamp=");
     if (ipdm.high_beams()) {
         Serial.print("high");
     } else if (ipdm.low_beams()) {
@@ -147,9 +147,11 @@ void printIpdm() {
     } else {
         Serial.print("off ");
     }
-    Serial.print(" rl=");
+    Serial.print(" fog=");
+    printOnOff(ipdm.fog_lights());
+    Serial.print(" running=");
     printOnOff(ipdm.running_lights());
-    Serial.print(" def=");
+    Serial.print(" defrost=");
     printOnOff(ipdm.defog());
     Serial.print(" ac=");
     printOnOff(ipdm.ac_compressor());

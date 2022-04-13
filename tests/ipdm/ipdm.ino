@@ -27,6 +27,7 @@ test(IPDMStateTest, Defog) {
     assertEqual(state.defog(), true);
     assertEqual(state.high_beams(), false);
     assertEqual(state.low_beams(), false);
+    assertEqual(state.fog_lights(), false);
     assertEqual(state.running_lights(), false);
     assertEqual(state.ac_compressor(), false);
     assertFalse(state.handle(f));
@@ -40,6 +41,7 @@ test(IPDMStateTest, HighBeams) {
     assertEqual(state.defog(), false);
     assertEqual(state.high_beams(), true);
     assertEqual(state.low_beams(), false);
+    assertEqual(state.fog_lights(), false);
     assertEqual(state.running_lights(), false);
     assertEqual(state.ac_compressor(), false);
     assertFalse(state.handle(f));
@@ -53,6 +55,21 @@ test(IPDMStateTest, LowBeams) {
     assertEqual(state.defog(), false);
     assertEqual(state.high_beams(), false);
     assertEqual(state.low_beams(), true);
+    assertEqual(state.fog_lights(), false);
+    assertEqual(state.running_lights(), false);
+    assertEqual(state.ac_compressor(), false);
+    assertFalse(state.handle(f));
+}
+
+test(IPDMStateTest, FogLights) {
+    Frame f(0x625, 0, {0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
+
+    IPDMState state;
+    assertTrue(state.handle(f));
+    assertEqual(state.defog(), false);
+    assertEqual(state.high_beams(), false);
+    assertEqual(state.low_beams(), false);
+    assertEqual(state.fog_lights(), true);
     assertEqual(state.running_lights(), false);
     assertEqual(state.ac_compressor(), false);
     assertFalse(state.handle(f));
@@ -66,6 +83,7 @@ test(IPDMStateTest, RunningLights) {
     assertEqual(state.defog(), false);
     assertEqual(state.high_beams(), false);
     assertEqual(state.low_beams(), false);
+    assertEqual(state.fog_lights(), false);
     assertEqual(state.running_lights(), true);
     assertEqual(state.ac_compressor(), false);
     assertFalse(state.handle(f));
@@ -79,6 +97,7 @@ test(IPDMStateTest, ACCompressor) {
     assertEqual(state.defog(), false);
     assertEqual(state.high_beams(), false);
     assertEqual(state.low_beams(), false);
+    assertEqual(state.fog_lights(), false);
     assertEqual(state.running_lights(), false);
     assertEqual(state.ac_compressor(), true);
     assertFalse(state.handle(f));

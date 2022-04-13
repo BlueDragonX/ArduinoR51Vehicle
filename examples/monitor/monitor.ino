@@ -28,6 +28,7 @@ void setup() {
         Serial.println("failed to setup CAN");
         while (true) { delay(1000); }
     }
+    Serial.println("monitoring Nissan R51 Pathfinder");
 }
 
 void loop() {

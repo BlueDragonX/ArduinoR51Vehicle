@@ -24,7 +24,7 @@ test(ClimateTemperatureStateTest, HandleTemperatures) {
     
     ClimateTemperatureState state;
     assertTrue(state.handle(f));
-    assertEqual(state.units(), ClimateTemperatureState::UNITS_US);
+    assertEqual(state.units(), UNITS_US);
     assertEqual(state.driver_temp(), 60);
     assertEqual(state.passenger_temp(), 65);
     assertEqual(state.outside_temp(), 88);
@@ -36,8 +36,8 @@ test(ClimateSystemStateTest, HandleOff) {
 
     ClimateSystemState state;
     assertTrue(state.handle(f));
-    assertEqual(state.system(), ClimateSystemState::SYSTEM_OFF);
-    assertEqual(state.vents(), ClimateSystemState::VENTS_CLOSED);
+    assertEqual(state.system(), CLIMATE_SYSTEM_OFF);
+    assertEqual(state.vents(), CLIMATE_VENTS_CLOSED);
     assertEqual(state.ac(), false);
     assertEqual(state.dual(), false);
     assertEqual(state.recirculate(), false);
@@ -50,8 +50,8 @@ test(ClimateSystemStateTest, HandleAuto) {
 
     ClimateSystemState state;
     assertTrue(state.handle(f));
-    assertEqual(state.system(), ClimateSystemState::SYSTEM_AUTO);
-    assertEqual(state.vents(), ClimateSystemState::VENTS_FEET);
+    assertEqual(state.system(), CLIMATE_SYSTEM_AUTO);
+    assertEqual(state.vents(), CLIMATE_VENTS_FEET);
     assertEqual(state.ac(), true);
     assertEqual(state.dual(), false);
     assertEqual(state.recirculate(), false);
@@ -64,8 +64,8 @@ test(ClimateSystemStateTest, HandleAutoDual) {
 
     ClimateSystemState state;
     assertTrue(state.handle(f));
-    assertEqual(state.system(), ClimateSystemState::SYSTEM_AUTO);
-    assertEqual(state.vents(), ClimateSystemState::VENTS_FACE_FEET);
+    assertEqual(state.system(), CLIMATE_SYSTEM_AUTO);
+    assertEqual(state.vents(), CLIMATE_VENTS_FACE_FEET);
     assertEqual(state.ac(), true);
     assertEqual(state.dual(), true);
     assertEqual(state.recirculate(), false);
@@ -78,8 +78,8 @@ test(ClimateSystemStateTest, HandleManual) {
 
     ClimateSystemState state;
     assertTrue(state.handle(f));
-    assertEqual(state.system(), ClimateSystemState::SYSTEM_MANUAL);
-    assertEqual(state.vents(), ClimateSystemState::VENTS_FACE_FEET);
+    assertEqual(state.system(), CLIMATE_SYSTEM_MANUAL);
+    assertEqual(state.vents(), CLIMATE_VENTS_FACE_FEET);
     assertEqual(state.ac(), true);
     assertEqual(state.dual(), true);
     assertEqual(state.recirculate(), true);
@@ -92,8 +92,8 @@ test(ClimateSystemStateTest, HandleDefrost) {
 
     ClimateSystemState state;
     assertTrue(state.handle(f));
-    assertEqual(state.system(), ClimateSystemState::SYSTEM_DEFROST);
-    assertEqual(state.vents(), ClimateSystemState::VENTS_WINDSHIELD);
+    assertEqual(state.system(), CLIMATE_SYSTEM_DEFROST);
+    assertEqual(state.vents(), CLIMATE_VENTS_WINDSHIELD);
     assertEqual(state.ac(), true);
     assertEqual(state.dual(), false);
     assertEqual(state.recirculate(), false);

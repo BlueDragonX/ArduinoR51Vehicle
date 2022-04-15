@@ -53,19 +53,16 @@ void printClimate() {
     // "climate: off/auto/manual (driver | passenger) fan feet/face/wind/recirc
     Serial.print("climate: ");
     switch (climate_system.system()) {
-        case ClimateSystemState::SYSTEM_INIT:
-            Serial.print("ini");
-            break;
-        case ClimateSystemState::SYSTEM_OFF:
+        case CLIMATE_SYSTEM_OFF:
             Serial.print("off");
             break;
-        case ClimateSystemState::SYSTEM_AUTO:
+        case CLIMATE_SYSTEM_AUTO:
             Serial.print("aut");
             break;
-        case ClimateSystemState::SYSTEM_MANUAL:
+        case CLIMATE_SYSTEM_MANUAL:
             Serial.print("man");
             break;
-        case ClimateSystemState::SYSTEM_DEFROST:
+        case CLIMATE_SYSTEM_DEFROST:
             Serial.print("def");
             break;
     }
@@ -79,29 +76,29 @@ void printClimate() {
         Serial.print(" ");
     }
     Serial.print(climate_temp.passenger_temp());
-    if (climate_temp.units() == ClimateTemperatureState::UNITS_METRIC) {
+    if (climate_temp.units() == UNITS_METRIC) {
         Serial.print("C");
     } else {
         Serial.print("F");
     }
     Serial.print(" ) ");
     switch (climate_system.vents()) {
-        case ClimateSystemState::VENTS_CLOSED:
+        case CLIMATE_VENTS_CLOSED:
             Serial.print("***");
             break;
-        case ClimateSystemState::VENTS_FACE:
+        case CLIMATE_VENTS_FACE:
             Serial.print("f**");
             break;
-        case ClimateSystemState::VENTS_FACE_FEET:
+        case CLIMATE_VENTS_FACE_FEET:
             Serial.print("ff*");
             break;
-        case ClimateSystemState::VENTS_FEET:
+        case CLIMATE_VENTS_FEET:
             Serial.print("*f*");
             break;
-        case ClimateSystemState::VENTS_FEET_WINDSHIELD:
+        case CLIMATE_VENTS_FEET_WINDSHIELD:
             Serial.print("*fw");
             break;
-        case ClimateSystemState::VENTS_WINDSHIELD:
+        case CLIMATE_VENTS_WINDSHIELD:
             Serial.print("**w");
             break;
     }
@@ -115,7 +112,7 @@ void printClimate() {
         Serial.print(" ");
     }
     Serial.print(climate_temp.outside_temp());
-    if (climate_temp.units() == ClimateTemperatureState::UNITS_METRIC) {
+    if (climate_temp.units() == UNITS_METRIC) {
         Serial.print("C");
     } else {
         Serial.print("F");

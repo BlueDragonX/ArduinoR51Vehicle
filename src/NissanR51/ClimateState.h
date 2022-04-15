@@ -4,19 +4,39 @@
 #include <Arduino.h>
 #include <Canny.h>
 #include "Handler.h"
+#include "Units.h"
 
 namespace NissanR51 {
+
+// Climate system operational state.
+enum ClimateSystem : uint8_t {
+    // System is off.
+    CLIMATE_SYSTEM_OFF,
+    // System is in auto mode. The system is controlled automatically based
+    // on selected zone temperatures, outside, and ambient air
+    // temperatures.
+    CLIMATE_SYSTEM_AUTO,
+    // System is being controlled manualy.
+    CLIMATE_SYSTEM_MANUAL,
+    // System is in defrost mode. Vents and fan speed are optimized for
+    // windshield and front window defrost.
+    CLIMATE_SYSTEM_DEFROST,
+};
+
+// Climate system vent state.
+enum ClimateVents : uint8_t {
+    CLIMATE_VENTS_CLOSED,
+    CLIMATE_VENTS_FACE,
+    CLIMATE_VENTS_FACE_FEET,
+    CLIMATE_VENTS_FEET,
+    CLIMATE_VENTS_FEET_WINDSHIELD,
+    CLIMATE_VENTS_WINDSHIELD,
+};
 
 // Tracks temperatures reported by the climate control system.
 // Handles CAN frame ID 0x54A.
 class ClimateTemperatureState : public Handler {
     public:
-        // Measurement units.
-        enum Units : uint8_t {
-            UNITS_METRIC,
-            UNITS_US,
-        };
-
         // Construct an empty temperature struct.
         ClimateTemperatureState() : units_(UNITS_METRIC), driver_temp_(0),
                 passenger_temp_(0), outside_temp_(0) {}
@@ -48,33 +68,7 @@ class ClimateTemperatureState : public Handler {
 // Handles CAN frame ID 0x54B.
 class ClimateSystemState : public Handler {
     public:
-        // Climate system operational state.
-        enum System : uint8_t {
-            SYSTEM_INIT,
-            // System is off.
-            SYSTEM_OFF,
-            // System is in auto mode. The system is controlled automatically based
-            // on selected zone temperatures, outside, and ambient air
-            // temperatures.
-            SYSTEM_AUTO,
-            // System is being controlled manualy.
-            SYSTEM_MANUAL,
-            // System is in defrost mode. Vents and fan speed are optimized for
-            // windshield and front window defrost.
-            SYSTEM_DEFROST,
-        };
-
-        // Vent state.
-        enum Vents : uint8_t {
-            VENTS_CLOSED,
-            VENTS_FACE,
-            VENTS_FACE_FEET,
-            VENTS_FEET,
-            VENTS_FEET_WINDSHIELD,
-            VENTS_WINDSHIELD,
-        };
-
-        ClimateSystemState() : system_(SYSTEM_OFF), vents_(VENTS_CLOSED),
+        ClimateSystemState() : system_(CLIMATE_SYSTEM_OFF), vents_(CLIMATE_VENTS_CLOSED),
                 ac_(false), dual_(false), recirculate_(false), fan_speed_(0) {}
 
         // Handle a 0x54B climate system frame. Returns true if the state changed
@@ -82,10 +76,10 @@ class ClimateSystemState : public Handler {
         bool handle(const Canny::Frame& frame);
 
         // Current system state.
-        enum System system() const { return system_; }
+        enum ClimateSystem system() const { return system_; }
 
         // Current vent state.
-        enum Vents vents() const { return vents_; }
+        enum ClimateVents vents() const { return vents_; }
 
         // True if the A/C compressor is being requested.
         bool ac() const { return ac_; }
@@ -100,8 +94,8 @@ class ClimateSystemState : public Handler {
         // Current fan speed. Values are from 0 (off) to 7 (max).
         uint8_t fan_speed() const { return fan_speed_; }
     private:
-        enum System system_;
-        enum Vents vents_;
+        enum ClimateSystem system_;
+        enum ClimateVents vents_;
         bool ac_;
         bool dual_;
         bool recirculate_;

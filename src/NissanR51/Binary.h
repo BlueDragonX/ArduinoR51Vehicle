@@ -3,6 +3,8 @@
 
 #include <Arduino.h>
 
+namespace NissanR51 {
+
 // Get a bit from a byte array.
 bool getBit(const byte* b, uint8_t offset, uint8_t bit);
 
@@ -18,5 +20,7 @@ bool setBitXor(byte* b, uint8_t offset, uint8_t bit, bool value);
 
 // Toggle a bit in a byte array. Return the resulting bit.
 bool toggleBit(byte* b, uint8_t offset, uint8_t bit);
+
+}  // namespace NissanR51
 
 #endif  // _NISSAN_R51_BINARY_H_

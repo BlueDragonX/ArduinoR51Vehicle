@@ -22,7 +22,7 @@ class ClimateSystemControl : public Controller {
 
         // Return true if the frame is available to be sent. Returns true if
         // called after construction. Cleared after a call to frame().
-        bool available() const override { return available_; }
+        bool available() override { return available_; }
 
         // Return a reference to the control frame.
         const Canny::Frame& frame() override;
@@ -94,7 +94,7 @@ class ClimateFanControl : public Controller {
 
         // Return true if the frame is available to be sent. Returns true if
         // called after construction. Cleared after a call to frame().
-        bool available() const override { return available_; }
+        bool available() override { return available_; }
 
         // Return a reference to the control frame.
         const Canny::Frame& frame() override;

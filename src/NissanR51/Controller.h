@@ -13,7 +13,7 @@ class Controller {
 
         // Return true if the control frame has available changes that should
         // be sent immediately. This is reset to false after a call to frame().
-        virtual bool available() const = 0;
+        virtual bool available() = 0;
 
         // Return a reference to the control frame. The lifecycle of the frame
         // is tied to the controller that returns it.

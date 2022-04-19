@@ -3,7 +3,7 @@
 #include <Arduino.h>
 #include <Canny.h>
 
-namespace NissanR51 {
+namespace R51 {
 
 bool ECMCoolantState::handle(const Canny::Frame& frame) {
     if (frame.id() != 0x551 || frame.size() < 1) {
@@ -17,4 +17,4 @@ bool ECMCoolantState::handle(const Canny::Frame& frame) {
     return false;
 }
 
-}  // namespace NissanR51
+}  // namespace R51

@@ -1,11 +1,11 @@
-#ifndef _NISSAN_R51_TIRES_H
-#define _NISSAN_R51_TIRES_H
+#ifndef _R51_VEHICLE_TIRES_H
+#define _R51_VEHICLE_TIRES_H
 
 #include <Arduino.h>
 #include <Canny.h>
 #include "Handler.h"
 
-namespace NissanR51 {
+namespace R51 {
 
 // Track tire pressure as reported in the 0x385 CAN frame.
 class TirePressureState : public Handler {
@@ -37,4 +37,4 @@ class TirePressureState : public Handler {
 
 }
 
-#endif  // _NISSAN_R51_TIRES_H
+#endif  // _R51_VEHICLE_TIRES_H

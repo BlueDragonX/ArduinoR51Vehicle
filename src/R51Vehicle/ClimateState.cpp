@@ -5,7 +5,7 @@
 #include "Binary.h"
 #include "Macros.h"
 
-namespace NissanR51 {
+namespace R51 {
 namespace {
 
 enum Mode : uint8_t {
@@ -81,4 +81,4 @@ bool ClimateSystemState::handle(const Canny::Frame& frame) {
     return changed;
 }
 
-}  // namespace NissanR51
+}  // namespace R51

@@ -1,5 +1,5 @@
-#ifndef _NISSAN_R51_MACROS_H_
-#define _NISSAN_R51_MACROS_H_
+#ifndef _R51_VEHICLE_MACROS_H_
+#define _R51_VEHICLE_MACROS_H_
 
 #define SET_ON_CHANGE(property, value) ({\
     auto tmp = value;\
@@ -9,4 +9,4 @@
     }\
 })
 
-#endif  // _NISSAN_R51_MACROS_H_
+#endif  // _R51_VEHICLE_MACROS_H_

@@ -4,7 +4,7 @@
 #include <Canny.h>
 #include "Binary.h"
 
-namespace NissanR51 {
+namespace R51 {
 namespace {
 
 bool isInit(const Canny::Frame& frame) {
@@ -163,4 +163,4 @@ void ClimateFanControl::decFanSpeed() {
     toggleBit(frame_.data(), 0, 4);
 }
 
-}  // namespace NissanR51
+}  // namespace R51

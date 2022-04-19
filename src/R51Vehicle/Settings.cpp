@@ -4,7 +4,7 @@
 #include <Faker.h>
 #include "Binary.h"
 
-namespace NissanR51 {
+namespace R51 {
 
 // Valid frame IDs for settings.
 enum SettingsFrameId : uint32_t {
@@ -922,4 +922,4 @@ bool Settings::resetSettingsToDefault() {
     return resetE_->trigger() && resetF_->trigger();
 }
 
-}  // namespace NissanR51
+}  // namespace R51

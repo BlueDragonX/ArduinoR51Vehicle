@@ -1,8 +1,8 @@
 #include <Arduino.h>
 #include <AUnit.h>
-#include <NissanR51.h>
+#include <R51Vehicle.h>
 
-namespace NissanR51 {
+namespace R51 {
 
 using namespace aunit;
 using ::Canny::Frame;
@@ -46,7 +46,7 @@ test(ECMCoolantStateTest, MaxTemp) {
     assertFalse(state.handle(f));
 }
 
-}  // namespace NissanR51
+}  // namespace R51
 
 // Test boilerplate.
 void setup() {

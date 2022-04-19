@@ -5,7 +5,7 @@
 #include "Binary.h"
 #include "Macros.h"
 
-namespace NissanR51 {
+namespace R51 {
 
 bool IPDMState::handle(const Canny::Frame& frame) {
     if (frame.id() != 0x625 || frame.size() < 6) {
@@ -21,4 +21,4 @@ bool IPDMState::handle(const Canny::Frame& frame) {
     return changed;
 }
 
-}  // namespace NissanR51
+}  // namespace R51

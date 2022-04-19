@@ -1,11 +1,11 @@
-#ifndef _NISSAN_R51_CLIMATE_CONTROL_H_
-#define _NISSAN_R51_CLIMATE_CONTROL_H_
+#ifndef _R51_VEHICLE_CLIMATE_CONTROL_H_
+#define _R51_VEHICLE_CLIMATE_CONTROL_H_
 
 #include <Arduino.h>
 #include <Canny.h>
 #include "Controller.h"
 
-namespace NissanR51 {
+namespace R51 {
 
 // Manages changes to the 0x540 CAN frame for controlling climate state. This
 // works by toggling bits in the control frame. Independent changes can be made
@@ -119,6 +119,6 @@ class ClimateFanControl : public Controller {
         bool available_;
 };
 
-}  // namespace NissanR51
+}  // namespace R51
 
-#endif  // _NISSAN_R51_CLIMATE_CONTROL_H_
+#endif  // _R51_VEHICLE_CLIMATE_CONTROL_H_

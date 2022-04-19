@@ -1,9 +1,9 @@
-#ifndef _NISSAN_R51_CONTROLLER_H_
-#define _NISSAN_R51_CONTROLLER_H_
+#ifndef _R51_VEHICLE_CONTROLLER_H_
+#define _R51_VEHICLE_CONTROLLER_H_
 
 #include <Canny.h>
 
-namespace NissanR51 {
+namespace R51 {
 
 // Controller manages a frame that is sent to control connected CAN devices.
 class Controller {
@@ -20,6 +20,6 @@ class Controller {
         virtual const Canny::Frame& frame() = 0;
 };
 
-}  // namespace NissanR51
+}  // namespace R51
 
-#endif  // _NISSAN_R51_CONTROLLER_H_
+#endif  // _R51_VEHICLE_CONTROLLER_H_

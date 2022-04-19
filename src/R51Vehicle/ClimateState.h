@@ -1,12 +1,12 @@
-#ifndef _NISSAN_R51_CLIMATE_STATE_H_
-#define _NISSAN_R51_CLIMATE_STATE_H_
+#ifndef _R51_VEHICLE_CLIMATE_STATE_H_
+#define _R51_VEHICLE_CLIMATE_STATE_H_
 
 #include <Arduino.h>
 #include <Canny.h>
 #include "Handler.h"
 #include "Units.h"
 
-namespace NissanR51 {
+namespace R51 {
 
 // Climate system operational state.
 enum ClimateSystem : uint8_t {
@@ -102,6 +102,6 @@ class ClimateSystemState : public Handler {
         uint8_t fan_speed_;
 };
 
-}  // namespace NissanR51
+}  // namespace R51
 
-#endif  // _NISSAN_R51_CLIMATE_STATE_H_
+#endif  // _R51_VEHICLE_CLIMATE_STATE_H_

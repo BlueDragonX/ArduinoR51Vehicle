@@ -1,5 +1,5 @@
-#ifndef _NISSAN_R51_SETTINGS_H_
-#define _NISSAN_R51_SETTINGS_H_
+#ifndef _R51_VEHICLE_SETTINGS_H_
+#define _R51_VEHICLE_SETTINGS_H_
 
 #include <Arduino.h>
 #include <Canny.h>
@@ -7,7 +7,7 @@
 #include "Controller.h"
 #include "Handler.h"
 
-namespace NissanR51 {
+namespace R51 {
 namespace internal {
 
 class SettingsImpl;
@@ -173,6 +173,6 @@ class Settings : public Handler, public Controller {
         bool setSlideDriverSeatBackOnExit(bool value);
 };
 
-}  // namespace NissanR51
+}  // namespace R51
 
-#endif  // _NISSAN_R51_SETTINGS_H_
+#endif  // _R51_VEHICLE_SETTINGS_H_

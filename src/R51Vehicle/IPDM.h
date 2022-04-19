@@ -1,11 +1,11 @@
-#ifndef _NISSAN_R51_IPDM_H_
-#define _NISSAN_R51_IPDM_H_
+#ifndef _R51_VEHICLE_IPDM_H_
+#define _R51_VEHICLE_IPDM_H_
 
 #include <Arduino.h>
 #include <Canny.h>
 #include "Handler.h"
 
-namespace NissanR51 {
+namespace R51 {
 
 // Tracks IPDM state stored in the 0x625 CAN frame.
 class IPDMState : public Handler {
@@ -44,6 +44,6 @@ class IPDMState : public Handler {
         bool ac_compressor_;
 };
 
-}  // namespace NissanR51
+}  // namespace R51
 
-#endif  // _NISSAN_R51_IPDM_H_
+#endif  // _R51_VEHICLE_IPDM_H_

@@ -1,11 +1,11 @@
-#ifndef _NISSAN_R51_ECM_H_
-#define _NISSAN_R51_ECM_H_
+#ifndef _R51_VEHICLE_ECM_H_
+#define _R51_VEHICLE_ECM_H_
 
 #include <Arduino.h>
 #include <Canny.h>
 #include "Handler.h"
 
-namespace NissanR51 {
+namespace R51 {
 
 // Track reported coolant temperature from the ECM via the 0x551 CAN frame.
 class ECMCoolantState : public Handler {
@@ -22,6 +22,6 @@ class ECMCoolantState : public Handler {
         int16_t coolant_temp_;
 };
 
-}  // namespace NissanR51
+}  // namespace R51
 
-#endif  // _NISSAN_R51_ECM_H_
+#endif  // _R51_VEHICLE_ECM_H_

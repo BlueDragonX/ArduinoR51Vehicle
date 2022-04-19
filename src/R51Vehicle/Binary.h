@@ -1,9 +1,9 @@
-#ifndef _NISSAN_R51_BINARY_H_
-#define _NISSAN_R51_BINARY_H_
+#ifndef _R51_BINARY_H_
+#define _R51_BINARY_H_
 
 #include <Arduino.h>
 
-namespace NissanR51 {
+namespace R51 {
 
 // Get a bit from a byte array.
 bool getBit(const byte* b, uint8_t offset, uint8_t bit);
@@ -21,6 +21,6 @@ bool setBitXor(byte* b, uint8_t offset, uint8_t bit, bool value);
 // Toggle a bit in a byte array. Return the resulting bit.
 bool toggleBit(byte* b, uint8_t offset, uint8_t bit);
 
-}  // namespace NissanR51
+}  // namespace R51
 
-#endif  // _NISSAN_R51_BINARY_H_
+#endif  // _R51_BINARY_H_

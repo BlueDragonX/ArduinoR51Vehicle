@@ -2,7 +2,7 @@
 
 #include <Arduino.h>
 #include <Canny.h>
-#include "Binary.h"
+#include <R51Core.h>
 
 namespace R51 {
 namespace {

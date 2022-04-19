@@ -2,7 +2,7 @@
 
 #include <Canny.h>
 #include <Faker.h>
-#include "Binary.h"
+#include <R51Core.h>
 
 namespace R51 {
 

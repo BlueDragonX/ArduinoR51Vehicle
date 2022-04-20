@@ -2,7 +2,7 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
 APP_NAME := ipdm
-ARDUINO_LIBS := ArduinoCanny ArduinoFaker ArduinoR51Core ArduinoR51Vehicle AUnit
+ARDUINO_LIBS := ArduinoCanny ArduinoCaster ArduinoFaker ArduinoR51Core ArduinoR51Test ArduinoR51Vehicle AUnit
 EXTRA_CXXFLAGS += -g
 include ../../../EpoxyDuino/EpoxyDuino.mk
 
@@ -10,4 +10,4 @@ test: all
 	@./$(APP_NAME).out
 
 valgrind: all
-	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./frame.out
+	@valgrind --tool=memcheck --leak-check=yes --show-reachable=yes --num-callers=20 --track-fds=yes ./$(APP_NAME).out

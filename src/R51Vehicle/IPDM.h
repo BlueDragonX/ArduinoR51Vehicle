@@ -3,45 +3,30 @@
 
 #include <Arduino.h>
 #include <Canny.h>
+#include <Caster.h>
+#include <Faker.h>
+#include <R51Core.h>
 #include "Handler.h"
 
 namespace R51 {
 
 // Tracks IPDM state stored in the 0x625 CAN frame.
-class IPDMState : public Handler {
+class IPDM : public Caster::Node<Message> {
     public:
-        IPDMState() : defog_(false), high_beams_(false), low_beams_(false),
-            running_lights_(false), fog_lights_(false), ac_compressor_(false) {}
+        IPDM(uint32_t tick_ms = 0, Faker::Clock* clock=Faker::Clock::real()) :
+            changed_(false), event_(Event::BODY_POWER_STATE, {0x00}), ticker_(tick_ms, clock) {}
 
         // Handle a 0x625 IPDM state frame. Returns true if the state changed
         // as a result of handling the frame.
-        bool handle(const Canny::Frame& frame) override;
+        void handle(const Message& msg) override;
 
-        // Return true if the defog heaters are enabled.
-        bool defog() const { return defog_; }
-
-        // Return true if the headlamp high beams are on.
-        bool high_beams() const { return high_beams_; }
-
-        // Return true if the headlamp low beams are on.
-        bool low_beams() const { return low_beams_; }
-
-        // Return true if the running lights are on.
-        bool running_lights() const { return running_lights_; }
-
-        // Return true if the fog lights are on.
-        bool fog_lights() const { return fog_lights_; }
-
-        // Return true if the A/C compressor clutch is active.
-        bool ac_compressor() const { return ac_compressor_; }
+        // Yield a BODY_POWER_STATE frame on change or tick.
+        void emit(const Caster::Yield<Message>& yield) override;
 
     private:
-        bool defog_;
-        bool high_beams_;
-        bool low_beams_;
-        bool running_lights_;
-        bool fog_lights_;
-        bool ac_compressor_;
+        bool changed_;
+        SystemEvent event_;
+        Ticker ticker_;
 };
 
 }  // namespace R51

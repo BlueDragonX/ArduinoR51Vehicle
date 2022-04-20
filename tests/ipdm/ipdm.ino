@@ -1,106 +1,126 @@
-#include <Arduino.h>
 #include <AUnit.h>
+#include <Arduino.h>
+#include <Faker.h>
+#include <R51Test.h>
 #include <R51Vehicle.h>
 
 namespace R51 {
 
 using namespace aunit;
 using ::Canny::Frame;
+using ::Faker::FakeClock;
 
-test(IPDMStateTest, IgnoreIncorrectID) {
+test(IPDMTest, IgnoreIncorrectID) {
+    FakeYield yield;
     Frame f(0x624, 0, {0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
-    IPDMState state;
-    assertFalse(state.handle(f));
+
+    IPDM ipdm;
+    ipdm.handle(f);
+    ipdm.emit(yield);
+    assertSize(yield, 0);
 }
 
-test(IPDMStateTest, IgnoreIncorrectSize) {
+test(IPDMTest, IgnoreIncorrectSize) {
+    FakeYield yield;
     Frame f(0x625, 0, {0x00, 0x00, 0x00});
-    IPDMState state;
-    assertFalse(state.handle(f));
+
+    IPDM ipdm;
+    ipdm.handle(f);
+    ipdm.emit(yield);
+    assertSize(yield, 0);
 }
 
-test(IPDMStateTest, Defog) {
+test(IPDMTest, Tick) {
+    FakeClock clock;
+    FakeYield yield;
+
+    IPDM ipdm(200, &clock);
+    ipdm.emit(yield);
+    assertSize(yield, 0);
+
+    SystemEvent expect(Event::BODY_POWER_STATE, {0x00});
+    clock.set(200);
+    ipdm.emit(yield);
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
+}
+
+test(IPDMTest, Defog) {
+    FakeYield yield;
     Frame f(0x625, 0, {0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
-    IPDMState state;
-    assertTrue(state.handle(f));
-    assertEqual(state.defog(), true);
-    assertEqual(state.high_beams(), false);
-    assertEqual(state.low_beams(), false);
-    assertEqual(state.fog_lights(), false);
-    assertEqual(state.running_lights(), false);
-    assertEqual(state.ac_compressor(), false);
-    assertFalse(state.handle(f));
+    IPDM ipdm;
+    ipdm.handle(f);
+    ipdm.emit(yield);
+    
+    SystemEvent expect(Event::BODY_POWER_STATE, {0x40});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
 }
 
-test(IPDMStateTest, HighBeams) {
+test(IPDMTest, HighBeams) {
+    FakeYield yield;
     Frame f(0x625, 0, {0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
-    IPDMState state;
-    assertTrue(state.handle(f));
-    assertEqual(state.defog(), false);
-    assertEqual(state.high_beams(), true);
-    assertEqual(state.low_beams(), false);
-    assertEqual(state.fog_lights(), false);
-    assertEqual(state.running_lights(), false);
-    assertEqual(state.ac_compressor(), false);
-    assertFalse(state.handle(f));
+    IPDM ipdm;
+    ipdm.handle(f);
+    ipdm.emit(yield);
+
+    SystemEvent expect(Event::BODY_POWER_STATE, {0x01});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
 }
 
-test(IPDMStateTest, LowBeams) {
+test(IPDMTest, LowBeams) {
+    FakeYield yield;
     Frame f(0x625, 0, {0x00, 0x20, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
-    IPDMState state;
-    assertTrue(state.handle(f));
-    assertEqual(state.defog(), false);
-    assertEqual(state.high_beams(), false);
-    assertEqual(state.low_beams(), true);
-    assertEqual(state.fog_lights(), false);
-    assertEqual(state.running_lights(), false);
-    assertEqual(state.ac_compressor(), false);
-    assertFalse(state.handle(f));
+    IPDM ipdm;
+    ipdm.handle(f);
+    ipdm.emit(yield);
+
+    SystemEvent expect(Event::BODY_POWER_STATE, {0x02});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
 }
 
-test(IPDMStateTest, FogLights) {
+test(IPDMTest, FogLights) {
+    FakeYield yield;
     Frame f(0x625, 0, {0x00, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
-    IPDMState state;
-    assertTrue(state.handle(f));
-    assertEqual(state.defog(), false);
-    assertEqual(state.high_beams(), false);
-    assertEqual(state.low_beams(), false);
-    assertEqual(state.fog_lights(), true);
-    assertEqual(state.running_lights(), false);
-    assertEqual(state.ac_compressor(), false);
-    assertFalse(state.handle(f));
+    IPDM ipdm;
+    ipdm.handle(f);
+    ipdm.emit(yield);
+
+    SystemEvent expect(Event::BODY_POWER_STATE, {0x08});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
 }
 
-test(IPDMStateTest, RunningLights) {
+test(IPDMTest, RunningLights) {
+    FakeYield yield;
     Frame f(0x625, 0, {0x00, 0x40, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
-    IPDMState state;
-    assertTrue(state.handle(f));
-    assertEqual(state.defog(), false);
-    assertEqual(state.high_beams(), false);
-    assertEqual(state.low_beams(), false);
-    assertEqual(state.fog_lights(), false);
-    assertEqual(state.running_lights(), true);
-    assertEqual(state.ac_compressor(), false);
-    assertFalse(state.handle(f));
+    IPDM ipdm;
+    ipdm.handle(f);
+    ipdm.emit(yield);
+
+    SystemEvent expect(Event::BODY_POWER_STATE, {0x04});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
 }
 
-test(IPDMStateTest, ACCompressor) {
+test(IPDMTest, ACCompressor) {
+    FakeYield yield;
     Frame f(0x625, 0, {0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00});
 
-    IPDMState state;
-    assertTrue(state.handle(f));
-    assertEqual(state.defog(), false);
-    assertEqual(state.high_beams(), false);
-    assertEqual(state.low_beams(), false);
-    assertEqual(state.fog_lights(), false);
-    assertEqual(state.running_lights(), false);
-    assertEqual(state.ac_compressor(), true);
-    assertFalse(state.handle(f));
+    IPDM ipdm;
+    ipdm.handle(f);
+    ipdm.emit(yield);
+
+    SystemEvent expect(Event::BODY_POWER_STATE, {0x80});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
 }
 
 }  // namespace R51

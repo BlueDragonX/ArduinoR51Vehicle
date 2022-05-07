@@ -1,20 +1,33 @@
 #include "ECM.h"
 
 #include <Arduino.h>
-#include <Canny.h>
+#include <Caster.h>
+#include <R51Core.h>
 
 namespace R51 {
 
-bool ECMCoolantState::handle(const Canny::Frame& frame) {
-    if (frame.id() != 0x551 || frame.size() < 1) {
-        return false;
+void EngineTempState::handle(const Message& msg) {
+    if (msg.type() != Message::CAN_FRAME ||
+            msg.can_frame().id() != 0x551 ||
+            msg.can_frame().size() < 1) {
+        return;
     }
-    int16_t value = (int16_t)frame.data()[0] - 40;
-    if (value != coolant_temp_) {
-        coolant_temp_ = value;
-        return true;
+
+    // The value sent by the ECM and our event are offset by -40 so we don't
+    // need to perform any adjustements.
+    uint8_t value = msg.can_frame().data()[0];
+    if (value != event_.data[0]) {
+        event_.data[0] = value;
+        changed_ = true;
     }
-    return false;
+}
+
+void EngineTempState::emit(const Caster::Yield<Message>& yield) {
+    if (changed_ || ticker_.active()) {
+        ticker_.reset();
+        yield(event_);
+        changed_ = false;
+    }
 }
 
 }  // namespace R51

@@ -2,24 +2,29 @@
 #define _R51_VEHICLE_ECM_H_
 
 #include <Arduino.h>
-#include <Canny.h>
-#include "Handler.h"
+#include <Caster.h>
+#include <Faker.h>
+#include <R51Core.h>
 
 namespace R51 {
 
 // Track reported coolant temperature from the ECM via the 0x551 CAN frame.
-class ECMCoolantState : public Handler {
+class EngineTempState : public Caster::Node<Message> {
     public:
-        ECMCoolantState() : coolant_temp_(0) {}
+        EngineTempState(uint32_t tick_ms = 0, Faker::Clock* clock = Faker::Clock::real()) :
+            changed_(false), event_(Event::ENGINE_TEMP_STATE, {0x00}), ticker_(tick_ms, clock) {}
 
         // Handle ECM 0x551 state frames. Returns true if the state changed as
         // a result of handling the frame.
-        bool handle(const Canny::Frame& frame) override;
+        void handle(const Message& msg) override;
 
-        // Return the engine coolant temperature in Celsius.
-        int16_t coolant_temp() const { return coolant_temp_; }
+        // Yield an ENGINE_TEMP_STATE frame on change or tick.
+        void emit(const Caster::Yield<Message>& yield) override;
+
     private:
-        int16_t coolant_temp_;
+        bool changed_;
+        SystemEvent event_;
+        Ticker ticker_;
 };
 
 }  // namespace R51

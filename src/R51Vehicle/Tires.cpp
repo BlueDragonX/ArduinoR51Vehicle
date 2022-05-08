@@ -3,30 +3,41 @@
 #include <Arduino.h>
 #include <Canny.h>
 #include <R51Core.h>
-#include "Macros.h"
 
 namespace R51 {
 namespace {
 
-double getPressure(const Canny::Frame& frame, int tire) {
+uint8_t getPressureValue(const Canny::Frame& frame, int tire) {
     if (getBit(frame.data(), 7, 7-tire)) {
-        return frame.data()[2+tire]/4.0;
+        return frame.data()[2+tire];
     }
-    return -1;
+    return 0;
 }
 
 }  // namespace
 
-bool TirePressureState::handle(const Canny::Frame& frame) {
-    if (frame.id() != 0x385 || frame.size() != 8) {
-        return false;
+void TirePressureState::handle(const Message& msg) {
+    if (msg.type() != Message::CAN_FRAME ||
+            msg.can_frame().id() != 0x385 ||
+            msg.can_frame().size() != 8) {
+        return;
     }
-    bool changed = false;
-    SET_ON_CHANGE(tire_pressure_1_, getPressure(frame, 0));
-    SET_ON_CHANGE(tire_pressure_2_, getPressure(frame, 1));
-    SET_ON_CHANGE(tire_pressure_3_, getPressure(frame, 2));
-    SET_ON_CHANGE(tire_pressure_4_, getPressure(frame, 3));
-    return changed;
+
+    for (int i = 0; i < 4; i++) {
+        uint8_t value = getPressureValue(msg.can_frame(), i);
+        if (event_.data[i] != value) {
+            event_.data[i] = value;
+            changed_ = true;
+        }
+    }
+}
+
+void TirePressureState::emit(const Caster::Yield<Message>& yield) {
+    if (changed_ || ticker_.active()) {
+        ticker_.reset();
+        yield(event_);
+        changed_ = false;
+    }
 }
 
 }  // namespace R51

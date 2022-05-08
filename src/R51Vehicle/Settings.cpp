@@ -5,6 +5,7 @@
 #include <R51Core.h>
 
 namespace R51 {
+namespace {
 
 // Valid frame IDs for settings.
 enum SettingsFrameId : uint32_t {
@@ -44,6 +45,34 @@ enum State : uint8_t {
     STATE_RESET,
 };
 
+// Available Remote Key Response Lights values.
+enum RemoteKeyResponseLights : uint8_t {
+    LIGHTS_OFF = 0,
+    LIGHTS_UNLOCK = 1,
+    LIGHTS_LOCK = 2,
+    LIGHTS_ON = 3,
+};
+
+// Available Auto Headlight Off Delay values.
+enum AutoHeadlightOffDelay : uint8_t {
+    DELAY_0S = 0,
+    DELAY_30S = 2,
+    DELAY_45S = 3,
+    DELAY_60S = 4,
+    DELAY_90S = 6,
+    DELAY_120S = 8,
+    DELAY_150S = 10,
+    DELAY_180S = 12,
+};
+
+// AVailable Auto Re-Lock Time values.
+enum AutoReLockTime : uint8_t {
+    RELOCK_OFF = 0,
+    RELOCK_1M = 1,
+    RELOCK_5M = 5,
+};
+
+// Return the ID of the response frame for the given settings request frame.
 uint32_t responseId(uint32_t request_id) {
     return (request_id & ~0x010) | 0x020;
 }
@@ -166,6 +195,97 @@ bool matchState(const byte* data, uint8_t state) {
             return false;
     }
 }
+
+// Return true if auto interior illumination is enabled.
+bool getAutoInteriorIllumination(const SystemEvent& event) {
+    return getBit(event.data, 0, 0);
+}
+
+void setAutoInteriorIllumination(SystemEvent* event, bool value) {
+    setBit(event->data, 0, 0, value);
+}
+
+// Return the auto-headlight sensitivity setting. Returns a value from
+// 0 to 3 inclusive.
+uint8_t getAutoHeadlightSensitivity(const SystemEvent& event) {
+    return event.data[1] & 0x03;
+}
+
+void setAutoHeadlightSensitivity(SystemEvent* event, uint8_t value) {
+    if (value > 3) {
+        value = 3;
+    }
+    event->data[1] &= 0xFC;
+    event->data[1] |= (value & 0x03);
+}
+
+// Return the auto-headlight off delay setting.
+AutoHeadlightOffDelay getAutoHeadlightOffDelay(const SystemEvent& event) {
+    return (AutoHeadlightOffDelay)((event.data[1] >> 4) & 0x0F);
+}
+
+void setAutoHeadlightOffDelay(SystemEvent* event, AutoHeadlightOffDelay value) {
+    event->data[1] &= 0x0F;
+    event->data[1] |= value << 4;
+}
+
+// Return true if speed sensitive wiper interval is enabled.
+bool getSpeedSensingWiperInterval(const SystemEvent& event) {
+    return getBit(event.data, 0, 2);
+}
+
+void setSpeedSensingWiperInterval(SystemEvent* event, bool value) {
+    setBit(event->data, 0, 2, value);
+}
+
+// Return true if the remote key response horn is enabled.
+bool getRemoteKeyResponseHorn(const SystemEvent& event) {
+    return getBit(event.data, 3, 0);
+}
+
+void setRemoteKeyResponseHorn(SystemEvent* event, bool value) {
+    setBit(event->data, 3, 0, value);
+}
+
+// Return the remote key response lights setting.
+RemoteKeyResponseLights getRemoteKeyResponseLights(const SystemEvent& event) {
+    return (RemoteKeyResponseLights)((event.data[3] >> 2) & 0x03);
+}
+
+void setRemoteKeyResponseLights(SystemEvent* event, RemoteKeyResponseLights value) {
+    event->data[3] &= 0xF3;
+    event->data[3] |= (value & 0x03) << 2;
+}
+
+// Return the auto re-lock time setting.
+AutoReLockTime getAutoReLockTime(const SystemEvent& event) {
+    return (AutoReLockTime)((event.data[2] >> 4) & 0x0F);
+}
+
+void setAutoReLockTime(SystemEvent* event, AutoReLockTime value) {
+    event->data[2] &= 0x0F;
+    event->data[2] |= value << 4;
+}
+
+// Return true if selective door unlock is enabled.
+bool getSelectiveDoorUnlock(const SystemEvent& event) {
+    return getBit(event.data, 2, 0);
+}
+
+void setSelectiveDoorUnlock(SystemEvent* event, bool value) {
+    setBit(event->data, 2, 0, value);
+}
+
+// Return true if the "slide driver seat back on exit" setting is enabled.
+bool getSlideDriverSeatBackOnExit(const SystemEvent& event) {
+    return getBit(event.data, 0, 1);
+}
+
+void setSlideDriverSeatBackOnExit(SystemEvent* event, bool value) {
+    setBit(event->data, 0, 1, value);
+}
+
+}  // namespace
 
 // Send a sequence of frames for managing settings.
 class SettingsSequence {
@@ -441,14 +561,70 @@ Settings::Settings(Faker::Clock* clock) :
         updateF_(new SettingsUpdate(SETTINGS_FRAME_F, clock)),
         resetF_(new SettingsReset(SETTINGS_FRAME_F, clock)),
         available_(false), frame_(0, 0, 8),
-        event_(Event::SETTINGS_STATE) {}
+        event_(Event::SETTINGS_STATE) {
+    init();
+}
 
 void Settings::handle(const Message& msg) {
     switch (msg.type()) {
         case Message::CAN_FRAME:
             handleFrame(msg.can_frame());
             break;
-        // TODO: Handle system events to change settings.
+        case Message::SYSTEM_EVENT:
+            handleEvent(msg.system_event());
+            break;
+        default:
+            break;
+    }
+}
+
+void Settings::handleEvent(const SystemEvent& event) {
+    switch ((Event)event.id) {
+        case Event::SETTINGS_REQUEST_CURRENT:
+            requestCurrent();
+            break;
+        case Event::SETTINGS_TOGGLE_AUTO_INTERIOR_ILLUMINATAION:
+            toggleAutoInteriorIllumination();
+            break;
+        case Event::SETTINGS_TOGGLE_SLIDE_DRIVER_SEAT_BACK_ON_EXIT:
+            toggleSlideDriverSeatBackOnExit();
+            break;
+        case Event::SETTINGS_TOGGLE_SPEED_SENSING_WIPER_INTERVALE:
+            toggleSpeedSensingWiperInterval();
+            break;
+        case Event::SETTINGS_NEXT_AUTO_HEADLIGHT_SENSITIVITY:
+            nextAutoHeadlightSensitivity();
+            break;
+        case Event::SETTINGS_PREV_AUTO_HEADLIGHT_SENSITIVITY:
+            prevAutoHeadlightSensitivity();
+            break;
+        case Event::SETTINGS_NEXT_AUTO_HEADLIGHT_OFF_DELAY:
+            nextAutoHeadlightOffDelay();
+            break;
+        case Event::SETTINGS_PREV_AUTO_HEADLIGHT_OFF_DELAY:
+            prevAutoHeadlightOffDelay();
+            break;
+        case Event::SETTINGS_TOGGLE_SELECTIVE_DOOR_UNLOCK:
+            toggleSelectiveDoorUnlock();
+            break;
+        case Event::SETTINGS_NEXT_AUTO_RELOCK_TIME:
+            nextAutoReLockTime();
+            break;
+        case Event::SETTINGS_PREV_AUTO_RELOCK_TIME:
+            prevAutoReLockTime();
+            break;
+        case Event::SETTINGS_TOGGLE_REMOTE_KEY_RESPONSE_HORN:
+            toggleRemoteKeyResponseHorn();
+            break;
+        case Event::SETTINGS_NEXT_REMOTE_KEY_RESPONSE_LIGHTS:
+            nextRemoteKeyResponseLights();
+            break;
+        case Event::SETTINGS_PREV_REMOTE_KEY_RESPONSE_LIGHTS:
+            prevRemoteKeyResponseLights();
+            break;
+        case Event::SETTINGS_FACTORY_RESET:
+            resetSettingsToDefault();
+            break;
         default:
             break;
     }
@@ -490,13 +666,13 @@ void Settings::handleState(const byte* data) {
 }
 
 void Settings::handleState05(const byte* data) {
-    setSlideDriverSeatBackOnExit(getBit(data, 3, 0));
+    setSlideDriverSeatBackOnExit(&event_, getBit(data, 3, 0));
 }
 
 void Settings::handleState10(const byte* data) {
-    setAutoInteriorIllumination(getBit(data, 4, 5));
-    setSelectiveDoorUnlock(getBit(data, 4, 7));
-    setRemoteKeyResponseHorn(getBit(data, 7, 3));
+    setAutoInteriorIllumination(&event_, getBit(data, 4, 5));
+    setSelectiveDoorUnlock(&event_, getBit(data, 4, 7));
+    setRemoteKeyResponseHorn(&event_, getBit(data, 7, 3));
 }
 
 void Settings::handleState21(const byte* data) {
@@ -505,76 +681,76 @@ void Settings::handleState21(const byte* data) {
 
     switch ((data[1] >> 6) & 0x03) {
         case 0x00:
-            setRemoteKeyResponseLights(Settings::LIGHTS_OFF);
+            setRemoteKeyResponseLights(&event_, LIGHTS_OFF);
             break;
         case 0x01:
-            setRemoteKeyResponseLights(Settings::LIGHTS_UNLOCK);
+            setRemoteKeyResponseLights(&event_, LIGHTS_UNLOCK);
             break;
         case 0x02:
-            setRemoteKeyResponseLights(Settings::LIGHTS_LOCK);
+            setRemoteKeyResponseLights(&event_, LIGHTS_LOCK);
             break;
         case 0x03:
-            setRemoteKeyResponseLights(Settings::LIGHTS_ON);
+            setRemoteKeyResponseLights(&event_, LIGHTS_ON);
             break;
     }
 
     switch ((data[1] >> 4) & 0x03) {
         case 0x00:
-            setAutoReLockTime(Settings::RELOCK_1M);
+            setAutoReLockTime(&event_, RELOCK_1M);
             break;
         case 0x01:
-            setAutoReLockTime(Settings::RELOCK_OFF);
+            setAutoReLockTime(&event_, RELOCK_OFF);
             break;
         case 0x02:
-            setAutoReLockTime(Settings::RELOCK_5M);
+            setAutoReLockTime(&event_, RELOCK_5M);
             break;
     }
 
     switch ((data[2] >> 2) & 0x03) {
         case 0x03:
-            setAutoHeadlightSensitivity(0);
+            setAutoHeadlightSensitivity(&event_, 0);
             break;
         case 0x00:
-            setAutoHeadlightSensitivity(1);
+            setAutoHeadlightSensitivity(&event_, 1);
             break;
         case 0x01:
-            setAutoHeadlightSensitivity(2);
+            setAutoHeadlightSensitivity(&event_, 2);
             break;
         case 0x02:
-            setAutoHeadlightSensitivity(3);
+            setAutoHeadlightSensitivity(&event_, 3);
             break;
     }
 
     switch (((data[2] & 0x01) << 2) | ((data[3] >> 6) & 0x03)) {
         case 0x01:
-            setAutoHeadlightOffDelay(Settings::DELAY_0S);
+            setAutoHeadlightOffDelay(&event_, DELAY_0S);
             break;
         case 0x02:
-            setAutoHeadlightOffDelay(Settings::DELAY_30S);
+            setAutoHeadlightOffDelay(&event_, DELAY_30S);
             break;
         case 0x00:
-            setAutoHeadlightOffDelay(Settings::DELAY_45S);
+            setAutoHeadlightOffDelay(&event_, DELAY_45S);
             break;
         case 0x03:
-            setAutoHeadlightOffDelay(Settings::DELAY_60S);
+            setAutoHeadlightOffDelay(&event_, DELAY_60S);
             break;
         case 0x04:
-            setAutoHeadlightOffDelay(Settings::DELAY_90S);
+            setAutoHeadlightOffDelay(&event_, DELAY_90S);
             break;
         case 0x05:
-            setAutoHeadlightOffDelay(Settings::DELAY_120S);
+            setAutoHeadlightOffDelay(&event_, DELAY_120S);
             break;
         case 0x06:
-            setAutoHeadlightOffDelay(Settings::DELAY_150S);
+            setAutoHeadlightOffDelay(&event_, DELAY_150S);
             break;
         case 0x07:
-            setAutoHeadlightOffDelay(Settings::DELAY_180S);
+            setAutoHeadlightOffDelay(&event_, DELAY_180S);
             break;
     }
 }
 
 void Settings::handleState22(const byte* data) {
-    setSpeedSensingWiperInterval(!getBit(data, 1, 7));
+    setSpeedSensingWiperInterval(&event_, !getBit(data, 1, 7));
 }
 
 void Settings::emit(const Caster::Yield<Message>& yield) {
@@ -629,99 +805,20 @@ bool Settings::ready() const {
     return readyE() && readyF();
 }
 
-bool Settings::autoInteriorIllumination() const {
-    return getBit(event_.data, 0, 0);
-}
-
-void Settings::setAutoInteriorIllumination(bool value) {
-    setBit(event_.data, 0, 0, value);
-}
-
-uint8_t Settings::autoHeadlightSensitivity() const {
-    return event_.data[1] & 0x03;
-}
-
-void Settings::setAutoHeadlightSensitivity(uint8_t value) {
-    if (value > 3) {
-        value = 3;
-    }
-    event_.data[1] &= 0xFC;
-    event_.data[1] |= (value & 0x03);
-}
-
-Settings::AutoHeadlightOffDelay Settings::autoHeadlightOffDelay() const {
-    return (AutoHeadlightOffDelay)((event_.data[1] >> 4) & 0x0F);
-}
-
-void Settings::setAutoHeadlightOffDelay(Settings::AutoHeadlightOffDelay value) {
-    event_.data[1] &= 0x0F;
-    event_.data[1] |= value << 4;
-}
-
-bool Settings::speedSensingWiperInterval() const {
-    return getBit(event_.data, 0, 2);
-}
-
-void Settings::setSpeedSensingWiperInterval(bool value) {
-    setBit(event_.data, 0, 2, value);
-}
-
-bool Settings::remoteKeyResponseHorn() const {
-    return getBit(event_.data, 3, 0);
-}
-
-void Settings::setRemoteKeyResponseHorn(bool value) {
-    setBit(event_.data, 3, 0, value);
-}
-
-Settings::RemoteKeyResponseLights Settings::remoteKeyResponseLights() const {
-    return (RemoteKeyResponseLights)((event_.data[3] >> 2) & 0x03);
-}
-
-void Settings::setRemoteKeyResponseLights(Settings::RemoteKeyResponseLights value) {
-    event_.data[3] &= 0xF3;
-    event_.data[3] |= (value & 0x03) << 2;
-}
-
-Settings::AutoReLockTime Settings::autoReLockTime() const {
-    return (AutoReLockTime)((event_.data[2] >> 4) & 0x0F);
-}
-
-void Settings::setAutoReLockTime(AutoReLockTime value) {
-    event_.data[2] &= 0x0F;
-    event_.data[2] |= value << 4;
-}
-
-bool Settings::selectiveDoorUnlock() const {
-    return getBit(event_.data, 2, 0);
-}
-
-void Settings::setSelectiveDoorUnlock(bool value) {
-    setBit(event_.data, 2, 0, value);
-}
-
-bool Settings::slideDriverSeatBackOnExit() const {
-    return getBit(event_.data, 0, 1);
-}
-
-void Settings::setSlideDriverSeatBackOnExit(bool value) {
-    setBit(event_.data, 0, 1, value);
-}
-
 bool Settings::toggleAutoInteriorIllumination() {
     if (!readyE()) {
         return false;
     }
-    updateE_->setPayload(STATE_AUTO_INTERIOR_ILLUM, !autoInteriorIllumination());
+    updateE_->setPayload(STATE_AUTO_INTERIOR_ILLUM, !getAutoInteriorIllumination(event_));
     return updateE_->trigger();
 }
 
 bool Settings::nextAutoHeadlightSensitivity() {
-    return triggerAutoHeadlightSensitivity(autoHeadlightSensitivity() + 1);
+    return triggerAutoHeadlightSensitivity(getAutoHeadlightSensitivity(event_) + 1);
 }
 
 bool Settings::prevAutoHeadlightSensitivity() {
-    return triggerAutoHeadlightSensitivity(autoHeadlightSensitivity() - 1);
+    return triggerAutoHeadlightSensitivity(getAutoHeadlightSensitivity(event_) - 1);
 }
 
 bool Settings::triggerAutoHeadlightSensitivity(uint8_t value) {
@@ -751,7 +848,7 @@ bool Settings::nextAutoHeadlightOffDelay() {
     if (!readyE()) {
         return false;
     }
-    switch (autoHeadlightOffDelay()) {
+    switch (getAutoHeadlightOffDelay(event_)) {
         case DELAY_0S:
             updateE_->setPayload(STATE_AUTO_HL_DELAY, 0x02);
             break;
@@ -784,7 +881,7 @@ bool Settings::prevAutoHeadlightOffDelay() {
     if (!readyE()) {
         return false;
     }
-    switch (autoHeadlightOffDelay()) {
+    switch (getAutoHeadlightOffDelay(event_)) {
         default:
         case DELAY_0S:
             return false;
@@ -817,7 +914,7 @@ bool Settings::toggleSpeedSensingWiperInterval() {
     if (!readyE()) {
         return false;
     }
-    updateE_->setPayload(STATE_SPEED_SENS_WIPER, speedSensingWiperInterval());
+    updateE_->setPayload(STATE_SPEED_SENS_WIPER, getSpeedSensingWiperInterval(event_));
     return updateE_->trigger();
 }
 
@@ -825,16 +922,16 @@ bool Settings::toggleRemoteKeyResponseHorn() {
     if (!readyE()) {
         return false;
     }
-    updateE_->setPayload(STATE_REMOTE_KEY_HORN, !remoteKeyResponseHorn());
+    updateE_->setPayload(STATE_REMOTE_KEY_HORN, !getRemoteKeyResponseHorn(event_));
     return updateE_->trigger();
 }
 
 bool Settings::nextRemoteKeyResponseLights() {
-    return triggerRemoteKeyResponseLights(remoteKeyResponseLights() + 1);
+    return triggerRemoteKeyResponseLights(getRemoteKeyResponseLights(event_) + 1);
 }
 
 bool Settings::prevRemoteKeyResponseLights() {
-    return triggerRemoteKeyResponseLights(remoteKeyResponseLights() - 1);
+    return triggerRemoteKeyResponseLights(getRemoteKeyResponseLights(event_) - 1);
 }
 
 bool Settings::triggerRemoteKeyResponseLights(uint8_t value) {
@@ -849,7 +946,7 @@ bool Settings::nextAutoReLockTime() {
     if (!readyE()) {
         return false;
     }
-    switch (autoReLockTime()) {
+    switch (getAutoReLockTime(event_)) {
         case RELOCK_OFF:
             updateE_->setPayload(STATE_AUTO_RELOCK_TIME, 0x00);
             break;
@@ -867,7 +964,7 @@ bool Settings::prevAutoReLockTime() {
     if (!readyE()) {
         return false;
     }
-    switch (autoReLockTime()) {
+    switch (getAutoReLockTime(event_)) {
         default:
         case RELOCK_OFF:
             return false;
@@ -885,7 +982,7 @@ bool Settings::toggleSelectiveDoorUnlock() {
     if (!readyE()) {
         return false;
     }
-    updateE_->setPayload(STATE_SELECT_DOOR_UNLOCK, !selectiveDoorUnlock());
+    updateE_->setPayload(STATE_SELECT_DOOR_UNLOCK, !getSelectiveDoorUnlock(event_));
     return updateE_->trigger();
 }
 
@@ -893,11 +990,11 @@ bool Settings::toggleSlideDriverSeatBackOnExit() {
     if (!readyF()) {
         return false;
     }
-    updateF_->setPayload(STATE_SLIDE_DRIVER_SEAT, !slideDriverSeatBackOnExit());
+    updateF_->setPayload(STATE_SLIDE_DRIVER_SEAT, !getSlideDriverSeatBackOnExit(event_));
     return updateF_->trigger();
 }
 
-bool Settings::retrieveSettings() {
+bool Settings::requestCurrent() {
     if (!ready()) {
         return false;
     }

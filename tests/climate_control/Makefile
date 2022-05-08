@@ -2,7 +2,8 @@
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
 APP_NAME := climate_control
-ARDUINO_LIBS := ArduinoCanny ArduinoCaster ArduinoFaker ArduinoR51Core ArduinoR51Vehicle AUnit
+ARDUINO_LIBS := AUnit ArduinoCanny ArduinoCaster ArduinoFaker \
+	ArduinoR51Core ArduinoR51Vehicle
 EXTRA_CXXFLAGS += -g
 include ../../../EpoxyDuino/EpoxyDuino.mk
 

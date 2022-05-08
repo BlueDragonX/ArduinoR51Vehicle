@@ -551,7 +551,7 @@ class SettingsReset : public SettingsSequence {
         bool state2x_;
 };
 
-Settings::Settings(Faker::Clock* clock) :
+Settings::Settings(bool init, Faker::Clock* clock) :
         initE_(new SettingsInit(SETTINGS_FRAME_E, clock)),
         retrieveE_(new SettingsRetrieve(SETTINGS_FRAME_E, clock)),
         updateE_(new SettingsUpdate(SETTINGS_FRAME_E, clock)),
@@ -561,8 +561,10 @@ Settings::Settings(Faker::Clock* clock) :
         updateF_(new SettingsUpdate(SETTINGS_FRAME_F, clock)),
         resetF_(new SettingsReset(SETTINGS_FRAME_F, clock)),
         available_(false), frame_(0, 0, 8),
-        event_(Event::SETTINGS_STATE) {
-    init();
+        event_(Event::SETTINGS_STATE, {0x00, 0x00, 0x00, 0x00}) {
+    if (init) {
+        this->init();
+    }
 }
 
 void Settings::handle(const Message& msg) {
@@ -589,7 +591,7 @@ void Settings::handleEvent(const SystemEvent& event) {
         case Event::SETTINGS_TOGGLE_SLIDE_DRIVER_SEAT_BACK_ON_EXIT:
             toggleSlideDriverSeatBackOnExit();
             break;
-        case Event::SETTINGS_TOGGLE_SPEED_SENSING_WIPER_INTERVALE:
+        case Event::SETTINGS_TOGGLE_SPEED_SENSING_WIPER_INTERVAL:
             toggleSpeedSensingWiperInterval();
             break;
         case Event::SETTINGS_NEXT_AUTO_HEADLIGHT_SENSITIVITY:

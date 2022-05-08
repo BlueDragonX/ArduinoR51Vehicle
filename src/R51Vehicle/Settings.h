@@ -17,7 +17,7 @@ class SettingsReset;
 // Communicates with the BCM to retrieve and update body control settings.
 class Settings : public Caster::Node<Message> {
     public:
-        Settings(Faker::Clock* clock = Faker::Clock::real());
+        Settings(bool init = true, Faker::Clock* clock = Faker::Clock::real());
 
         // Handle BCM state frames 0x72E and 0x72F.
         void handle(const Message& msg) override;

@@ -3,16 +3,11 @@
 
 #include <Arduino.h>
 #include <Canny.h>
+#include <Caster.h>
 #include <Faker.h>
-#include "Controller.h"
-#include "Handler.h"
+#include <R51Core.h>
 
 namespace R51 {
-namespace internal {
-
-class SettingsImpl;
-
-}  // namespace internal
 
 class SettingsInit;
 class SettingsRetrieve;
@@ -20,7 +15,7 @@ class SettingsUpdate;
 class SettingsReset;
 
 // Communicates with the BCM to retrieve and update body control settings.
-class Settings : public Handler, public Controller {
+class Settings : public Caster::Node<Message> {
     public:
         enum RemoteKeyResponseLights : uint8_t {
             LIGHTS_OFF = 0,
@@ -48,17 +43,12 @@ class Settings : public Handler, public Controller {
 
         Settings(Faker::Clock* clock = Faker::Clock::real());
 
-        // Return true if a control frame is available to be sent. The frame()
-        // getter should be used to retrieve the available frame. A settings
-        // control frame should only be sent once. A subsequent call to
-        // available() after frame() will prepare the next frame to be sent.
-        bool available() override;
-
-        // Return a reference to the current control frame. Resets available.
-        const Canny::Frame& frame() override;
-
         // Handle BCM state frames 0x72E and 0x72F.
-        bool handle(const Canny::Frame& frame) override;
+        void handle(const Message& msg) override;
+
+        // Yield CAN frames to communicate with the vehicle or SETTINGS_STATE
+        // events to indicate a change to the stored settings.
+        void emit(const Caster::Yield<Message>& yield) override;
 
         // Exchange init frames with BCM. 
         bool init();
@@ -137,40 +127,43 @@ class Settings : public Handler, public Controller {
         bool resetSettingsToDefault();
 
     private:
-        bool handleState(const Canny::Frame& frame);
-        bool handleState05(const byte* data);
-        bool handleState10(const byte* data);
-        bool handleState21(const byte* data);
-        bool handleState22(const byte* data);
+        void handleFrame(const Canny::Frame& frame);
+        void handleState(const byte* data);
+        void handleState05(const byte* data);
+        void handleState10(const byte* data);
+        void handleState21(const byte* data);
+        void handleState22(const byte* data);
 
         SettingsInit* initE_;
         SettingsRetrieve* retrieveE_;
         SettingsUpdate* updateE_;
         SettingsReset* resetE_;
-        bool readyE() const;
 
         SettingsInit* initF_;
         SettingsRetrieve* retrieveF_;
         SettingsUpdate* updateF_;
         SettingsReset* resetF_;
-        bool readyF() const;
 
         bool available_;
         Canny::Frame frame_;
-        uint8_t state_[4];
+        SystemEvent event_;
+
+        bool readyE() const;
+        bool readyF() const;
+        bool ready() const;
 
         bool triggerAutoHeadlightSensitivity(uint8_t value);
         bool triggerRemoteKeyResponseLights(uint8_t value);
 
-        bool setAutoInteriorIllumination(bool value);
-        bool setAutoHeadlightSensitivity(uint8_t value);
-        bool setAutoHeadlightOffDelay(AutoHeadlightOffDelay value);
-        bool setSpeedSensingWiperInterval(bool value);
-        bool setRemoteKeyResponseHorn(bool value);
-        bool setRemoteKeyResponseLights(RemoteKeyResponseLights value);
-        bool setAutoReLockTime(AutoReLockTime value);
-        bool setSelectiveDoorUnlock(bool value);
-        bool setSlideDriverSeatBackOnExit(bool value);
+        void setAutoInteriorIllumination(bool value);
+        void setAutoHeadlightSensitivity(uint8_t value);
+        void setAutoHeadlightOffDelay(AutoHeadlightOffDelay value);
+        void setSpeedSensingWiperInterval(bool value);
+        void setRemoteKeyResponseHorn(bool value);
+        void setRemoteKeyResponseLights(RemoteKeyResponseLights value);
+        void setAutoReLockTime(AutoReLockTime value);
+        void setSelectiveDoorUnlock(bool value);
+        void setSlideDriverSeatBackOnExit(bool value);
 };
 
 }  // namespace R51

@@ -440,155 +440,176 @@ Settings::Settings(Faker::Clock* clock) :
         retrieveF_(new SettingsRetrieve(SETTINGS_FRAME_F, clock)),
         updateF_(new SettingsUpdate(SETTINGS_FRAME_F, clock)),
         resetF_(new SettingsReset(SETTINGS_FRAME_F, clock)),
-        available_(false), frame_(0, 0, 8) {
-    memset(state_, 0, 4);
-}
+        available_(false), frame_(0, 0, 8),
+        event_(Event::SETTINGS_STATE) {}
 
-bool Settings::available() {
-    if (!available_) {
-        available_ = initE_->read(&frame_) ||
-            retrieveE_->read(&frame_) ||
-            updateE_->read(&frame_) ||
-            resetE_->read(&frame_) ||
-            initF_->read(&frame_) ||
-            retrieveF_->read(&frame_) ||
-            updateF_->read(&frame_) ||
-            resetF_->read(&frame_);
+void Settings::handle(const Message& msg) {
+    switch (msg.type()) {
+        case Message::CAN_FRAME:
+            handleFrame(msg.can_frame());
+            break;
+        // TODO: Handle system events to change settings.
+        default:
+            break;
     }
-    return available_;
 }
 
-const Canny::Frame& Settings::frame() {
-    available_ = false;
-    return frame_;
-}
-
-bool Settings::handle(const Canny::Frame& frame) {
+void Settings::handleFrame(const Canny::Frame& frame) {
     if (frame.size() < 8) {
-        return false;
+        return;
     }
     if (frame.id() == responseId(SETTINGS_FRAME_E)) {
         initE_->handle(frame);
         retrieveE_->handle(frame);
         updateE_->handle(frame);
         resetE_->handle(frame);
-        return handleState(frame);
+        handleState(frame.data());
     } else if (frame.id() == responseId(SETTINGS_FRAME_F)) {
         initF_->handle(frame);
         retrieveF_->handle(frame);
         updateF_->handle(frame);
         resetF_->handle(frame);
-        return handleState(frame);
+        handleState(frame.data());
     }
-    return false;
 }
 
-bool Settings::handleState(const Canny::Frame& frame) {
-    if (matchPrefix(frame.data(), 0x05)) {
-        return handleState05(frame.data());
-    } else if (matchPrefix(frame.data(), 0x10)) {
-        return handleState10(frame.data());
-    } else if (matchPrefix(frame.data(), 0x21)) {
-        return handleState21(frame.data());
-    } else if (matchPrefix(frame.data(), 0x22)) {
-        return handleState22(frame.data());
+void Settings::handleState(const byte* data) {
+    if (matchPrefix(data, 0x05)) {
+        handleState05(data);
+        available_ = true;
+    } else if (matchPrefix(data, 0x10)) {
+        handleState10(data);
+        available_ = true;
+    } else if (matchPrefix(data, 0x21)) {
+        handleState21(data);
+        available_ = true;
+    } else if (matchPrefix(data, 0x22)) {
+        handleState22(data);
+        available_ = true;
     }
-    return false;
 }
 
-bool Settings::handleState05(const byte* data) {
-    return setSlideDriverSeatBackOnExit(getBit(data, 3, 0));
+void Settings::handleState05(const byte* data) {
+    setSlideDriverSeatBackOnExit(getBit(data, 3, 0));
 }
 
-bool Settings::handleState10(const byte* data) {
-    return setAutoInteriorIllumination(getBit(data, 4, 5)) |
-        setSelectiveDoorUnlock(getBit(data, 4, 7)) |
-        setRemoteKeyResponseHorn(getBit(data, 7, 3));
+void Settings::handleState10(const byte* data) {
+    setAutoInteriorIllumination(getBit(data, 4, 5));
+    setSelectiveDoorUnlock(getBit(data, 4, 7));
+    setRemoteKeyResponseHorn(getBit(data, 7, 3));
 }
 
-bool Settings::handleState21(const byte* data) {
-    // Translates incoming state to our owns tate representation. A 0 value
+void Settings::handleState21(const byte* data) {
+    // Translates incoming state to our own state representation. A 0 value
     // typically represents the default on the BCM side.
 
-    bool changed = false;
     switch ((data[1] >> 6) & 0x03) {
         case 0x00:
-            changed |= setRemoteKeyResponseLights(Settings::LIGHTS_OFF);
+            setRemoteKeyResponseLights(Settings::LIGHTS_OFF);
             break;
         case 0x01:
-            changed |= setRemoteKeyResponseLights(Settings::LIGHTS_UNLOCK);
+            setRemoteKeyResponseLights(Settings::LIGHTS_UNLOCK);
             break;
         case 0x02:
-            changed |= setRemoteKeyResponseLights(Settings::LIGHTS_LOCK);
+            setRemoteKeyResponseLights(Settings::LIGHTS_LOCK);
             break;
         case 0x03:
-            changed |= setRemoteKeyResponseLights(Settings::LIGHTS_ON);
+            setRemoteKeyResponseLights(Settings::LIGHTS_ON);
             break;
     }
 
     switch ((data[1] >> 4) & 0x03) {
         case 0x00:
-            changed |= setAutoReLockTime(Settings::RELOCK_1M);
+            setAutoReLockTime(Settings::RELOCK_1M);
             break;
         case 0x01:
-            changed |= setAutoReLockTime(Settings::RELOCK_OFF);
+            setAutoReLockTime(Settings::RELOCK_OFF);
             break;
         case 0x02:
-            changed |= setAutoReLockTime(Settings::RELOCK_5M);
+            setAutoReLockTime(Settings::RELOCK_5M);
             break;
     }
 
     switch ((data[2] >> 2) & 0x03) {
         case 0x03:
-            changed |= setAutoHeadlightSensitivity(0);
+            setAutoHeadlightSensitivity(0);
             break;
         case 0x00:
-            changed |= setAutoHeadlightSensitivity(1);
+            setAutoHeadlightSensitivity(1);
             break;
         case 0x01:
-            changed |= setAutoHeadlightSensitivity(2);
+            setAutoHeadlightSensitivity(2);
             break;
         case 0x02:
-            changed |= setAutoHeadlightSensitivity(3);
+            setAutoHeadlightSensitivity(3);
             break;
     }
 
     switch (((data[2] & 0x01) << 2) | ((data[3] >> 6) & 0x03)) {
         case 0x01:
-            changed |= setAutoHeadlightOffDelay(Settings::DELAY_0S);
+            setAutoHeadlightOffDelay(Settings::DELAY_0S);
             break;
         case 0x02:
-            changed |= setAutoHeadlightOffDelay(Settings::DELAY_30S);
+            setAutoHeadlightOffDelay(Settings::DELAY_30S);
             break;
         case 0x00:
-            changed |= setAutoHeadlightOffDelay(Settings::DELAY_45S);
+            setAutoHeadlightOffDelay(Settings::DELAY_45S);
             break;
         case 0x03:
-            changed |= setAutoHeadlightOffDelay(Settings::DELAY_60S);
+            setAutoHeadlightOffDelay(Settings::DELAY_60S);
             break;
         case 0x04:
-            changed |= setAutoHeadlightOffDelay(Settings::DELAY_90S);
+            setAutoHeadlightOffDelay(Settings::DELAY_90S);
             break;
         case 0x05:
-            changed |= setAutoHeadlightOffDelay(Settings::DELAY_120S);
+            setAutoHeadlightOffDelay(Settings::DELAY_120S);
             break;
         case 0x06:
-            changed |= setAutoHeadlightOffDelay(Settings::DELAY_150S);
+            setAutoHeadlightOffDelay(Settings::DELAY_150S);
             break;
         case 0x07:
-            changed |= setAutoHeadlightOffDelay(Settings::DELAY_180S);
+            setAutoHeadlightOffDelay(Settings::DELAY_180S);
             break;
     }
-
-    return changed;
 }
 
-bool Settings::handleState22(const byte* data) {
-    return setSpeedSensingWiperInterval(!getBit(data, 1, 7));
+void Settings::handleState22(const byte* data) {
+    setSpeedSensingWiperInterval(!getBit(data, 1, 7));
+}
+
+void Settings::emit(const Caster::Yield<Message>& yield) {
+    if (initE_->read(&frame_)) {
+        yield(frame_);
+    }
+    if (retrieveE_->read(&frame_)) {
+        yield(frame_);
+    }
+    if (updateE_->read(&frame_)) {
+        yield(frame_);
+    }
+    if (resetE_->read(&frame_)) {
+        yield(frame_);
+    }
+    if (initF_->read(&frame_)) {
+        yield(frame_);
+    }
+    if (retrieveF_->read(&frame_)) {
+        yield(frame_);
+    }
+    if (updateF_->read(&frame_)) {
+        yield(frame_);
+    }
+    if (resetF_->read(&frame_)) {
+        yield(frame_);
+    }
+    if (ready() && available_) {
+        available_ = false;
+        yield(event_);
+    }
 }
 
 bool Settings::init() {
-    if (!readyE() || !readyF()) {
+    if (!ready()) {
         return false;
     }
     return initE_->trigger() && initF_->trigger();
@@ -604,119 +625,87 @@ bool Settings::readyF() const {
         updateF_->ready() && resetF_->ready();
 }
 
-bool Settings::autoInteriorIllumination() const {
-    return getBit(state_, 0, 0);
+bool Settings::ready() const {
+    return readyE() && readyF();
 }
 
-bool Settings::setAutoInteriorIllumination(bool value) {
-    if (autoInteriorIllumination() == value) {
-        return false;
-    }
-    setBit(state_, 0, 0, value);
-    return true;
+bool Settings::autoInteriorIllumination() const {
+    return getBit(event_.data, 0, 0);
+}
+
+void Settings::setAutoInteriorIllumination(bool value) {
+    setBit(event_.data, 0, 0, value);
 }
 
 uint8_t Settings::autoHeadlightSensitivity() const {
-    return state_[1] & 0x03;
+    return event_.data[1] & 0x03;
 }
 
-bool Settings::setAutoHeadlightSensitivity(uint8_t value) {
+void Settings::setAutoHeadlightSensitivity(uint8_t value) {
     if (value > 3) {
         value = 3;
     }
-    if (autoHeadlightSensitivity() == value) {
-        return false;
-    }
-    state_[1] &= 0xFC;
-    state_[1] |= value;
-    return true;
+    event_.data[1] &= 0xFC;
+    event_.data[1] |= (value & 0x03);
 }
 
 Settings::AutoHeadlightOffDelay Settings::autoHeadlightOffDelay() const {
-    return (AutoHeadlightOffDelay)((state_[1] >> 4) & 0x0F);
+    return (AutoHeadlightOffDelay)((event_.data[1] >> 4) & 0x0F);
 }
 
-bool Settings::setAutoHeadlightOffDelay(Settings::AutoHeadlightOffDelay value) {
-    if (autoHeadlightOffDelay() == value) {
-        return false;
-    }
-    state_[1] &= 0x0F;
-    state_[1] |= value << 4;
-    return true;
+void Settings::setAutoHeadlightOffDelay(Settings::AutoHeadlightOffDelay value) {
+    event_.data[1] &= 0x0F;
+    event_.data[1] |= value << 4;
 }
 
 bool Settings::speedSensingWiperInterval() const {
-    return getBit(state_, 0, 2);
+    return getBit(event_.data, 0, 2);
 }
 
-bool Settings::setSpeedSensingWiperInterval(bool value) {
-    if (speedSensingWiperInterval() == value) {
-        return false;
-    }
-    setBit(state_, 0, 2, value);
-    return true;
+void Settings::setSpeedSensingWiperInterval(bool value) {
+    setBit(event_.data, 0, 2, value);
 }
 
 bool Settings::remoteKeyResponseHorn() const {
-    return getBit(state_, 3, 0);
+    return getBit(event_.data, 3, 0);
 }
 
-bool Settings::setRemoteKeyResponseHorn(bool value) {
-    if (remoteKeyResponseHorn() == value) {
-        return false;
-    }
-    setBit(state_, 3, 0, value);
-    return true;
+void Settings::setRemoteKeyResponseHorn(bool value) {
+    setBit(event_.data, 3, 0, value);
 }
 
 Settings::RemoteKeyResponseLights Settings::remoteKeyResponseLights() const {
-    return (RemoteKeyResponseLights)((state_[3] >> 2) & 0x03);
+    return (RemoteKeyResponseLights)((event_.data[3] >> 2) & 0x03);
 }
 
-bool Settings::setRemoteKeyResponseLights(Settings::RemoteKeyResponseLights value) {
-    if (remoteKeyResponseLights() == value) {
-        return false;
-    }
-    state_[3] &= 0xF3;
-    state_[3] |= value << 2;
-    return true;
+void Settings::setRemoteKeyResponseLights(Settings::RemoteKeyResponseLights value) {
+    event_.data[3] &= 0xF3;
+    event_.data[3] |= (value & 0x03) << 2;
 }
 
 Settings::AutoReLockTime Settings::autoReLockTime() const {
-    return (AutoReLockTime)((state_[2] >> 4) & 0x0F);
+    return (AutoReLockTime)((event_.data[2] >> 4) & 0x0F);
 }
 
-bool Settings::setAutoReLockTime(AutoReLockTime value) {
-    if (autoReLockTime() == value) {
-        return false;
-    }
-    state_[2] &= 0x0F;
-    state_[2] |= value << 4;
-    return true;
+void Settings::setAutoReLockTime(AutoReLockTime value) {
+    event_.data[2] &= 0x0F;
+    event_.data[2] |= value << 4;
 }
 
 bool Settings::selectiveDoorUnlock() const {
-    return getBit(state_, 2, 0);
+    return getBit(event_.data, 2, 0);
 }
 
-bool Settings::setSelectiveDoorUnlock(bool value) {
-    if (selectiveDoorUnlock() == value) {
-        return false;
-    }
-    setBit(state_, 2, 0, value);
-    return true;
+void Settings::setSelectiveDoorUnlock(bool value) {
+    setBit(event_.data, 2, 0, value);
 }
 
 bool Settings::slideDriverSeatBackOnExit() const {
-    return getBit(state_, 0, 1);
+    return getBit(event_.data, 0, 1);
 }
 
-bool Settings::setSlideDriverSeatBackOnExit(bool value) {
-    if (slideDriverSeatBackOnExit() == value) {
-        return false;
-    }
-    setBit(state_, 0, 1, value);
-    return true;
+void Settings::setSlideDriverSeatBackOnExit(bool value) {
+    setBit(event_.data, 0, 1, value);
 }
 
 bool Settings::toggleAutoInteriorIllumination() {
@@ -909,14 +898,14 @@ bool Settings::toggleSlideDriverSeatBackOnExit() {
 }
 
 bool Settings::retrieveSettings() {
-    if (!readyE() || !readyF()) {
+    if (!ready()) {
         return false;
     }
     return retrieveE_->trigger() && retrieveF_->trigger();
 }
 
 bool Settings::resetSettingsToDefault() {
-    if (!readyE() || !readyF()) {
+    if (!ready()) {
         return false;
     }
     return resetE_->trigger() && resetF_->trigger();

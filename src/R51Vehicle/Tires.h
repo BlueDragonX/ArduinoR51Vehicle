@@ -2,6 +2,7 @@
 #define _R51_VEHICLE_TIRES_H
 
 #include <Arduino.h>
+#include <Canny.h>
 #include <Caster.h>
 #include <R51Core.h>
 
@@ -10,9 +11,7 @@ namespace R51 {
 // Track tire pressure as reported in the 0x385 CAN frame.
 class TirePressureState : public Caster::Node<Message> {
     public:
-        TirePressureState(uint32_t tick_ms = 0, Faker::Clock* clock = Faker::Clock::real()) :
-            changed_(false), event_(Event::TIRE_PRESSURE_STATE,
-            {0x00, 0x00, 0x00, 0x00}), ticker_(tick_ms, clock) {}
+        TirePressureState(uint32_t tick_ms = 0, Faker::Clock* clock = Faker::Clock::real());
 
         // Handle 0x385 tire pressure state frames. Returns true if the state
         // changed as a result of handling the frame.
@@ -25,6 +24,10 @@ class TirePressureState : public Caster::Node<Message> {
         bool changed_;
         SystemEvent event_;
         Ticker ticker_;
+        uint8_t map_[4];
+
+        void handleFrame(const Canny::Frame& frame);
+        void handleEvent(const SystemEvent& event);
 };
 
 }

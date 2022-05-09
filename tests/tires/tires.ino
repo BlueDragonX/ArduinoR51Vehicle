@@ -84,7 +84,6 @@ test(TirePressureStateTest, Tire3Set) {
     FakeYield yield;
     Frame f(0x385, 0, {0x84, 0x0C, 0x00, 0x00, 0x75, 0x00, 0x00, 0x20});
 
-
     TirePressureState tire;
     tire.handle(f);
     tire.emit(yield);
@@ -97,13 +96,65 @@ test(TirePressureStateTest, Tire4Set) {
     FakeYield yield;
     Frame f(0x385, 0, {0x84, 0x0C, 0x00, 0x00, 0x00, 0x77, 0x00, 0x10});
 
-
     TirePressureState tire;
     tire.handle(f);
     tire.emit(yield);
 
     SystemEvent expect(Event::TIRE_PRESSURE_STATE, {0x00, 0x00, 0x00, 0x77});
     assertIsSystemEvent(yield.messages()[0], expect);
+}
+
+test(TirePressureStateTest, Swap) {
+    FakeYield yield;
+    TirePressureState tire;
+    Frame f;
+    SystemEvent control;
+    SystemEvent expect;
+
+    // Populate initial values from frame.
+    f = Frame(0x385, 0, {0x84, 0x0C, 0x01, 0x02, 0x03, 0x04, 0x00, 0xF0});
+    tire.handle(f);
+    tire.emit(yield);
+    expect = SystemEvent(Event::TIRE_PRESSURE_STATE, {0x01, 0x02, 0x03, 0x04});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
+    yield.clear();
+
+    // Send control frame to swap positions.
+    control = SystemEvent(Event::TIRE_SWAP_POSITION, {0x03});
+    tire.handle(control);
+    tire.emit(yield);
+    expect = SystemEvent(Event::TIRE_PRESSURE_STATE, {0x04, 0x02, 0x03, 0x01});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
+    yield.clear();
+
+    // Send new values from frame.
+    f = Frame(0x385, 0, {0x84, 0x0C, 0x11, 0x12, 0x13, 0x14, 0x00, 0xF0});
+    tire.handle(f);
+    tire.emit(yield);
+    expect = SystemEvent(Event::TIRE_PRESSURE_STATE, {0x14, 0x12, 0x13, 0x11});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
+    yield.clear();
+
+    // Send control frame to swap positions again.
+    control = SystemEvent(Event::TIRE_SWAP_POSITION, {0x23});
+    tire.handle(control);
+    tire.emit(yield);
+    expect = SystemEvent(Event::TIRE_PRESSURE_STATE, {0x14, 0x12, 0x11, 0x13});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
+    yield.clear();
+
+    // Send new values from frame.
+    f = Frame(0x385, 0, {0x84, 0x0C, 0x21, 0x22, 0x23, 0x24, 0x00, 0xF0});
+    tire.handle(f);
+    tire.emit(yield);
+    expect = SystemEvent(Event::TIRE_PRESSURE_STATE, {0x24, 0x22, 0x21, 0x23});
+    assertSize(yield, 1);
+    assertIsSystemEvent(yield.messages()[0], expect);
+    yield.clear();
 }
 
 }  // namespace R51

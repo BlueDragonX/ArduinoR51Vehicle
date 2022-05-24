@@ -7,8 +7,8 @@ namespace R51 {
 
 // Measurement units.
 enum Units : uint8_t {
-    UNITS_METRIC,
-    UNITS_US,
+    UNITS_METRIC = 0,
+    UNITS_US = 1,
 };
 
 }  // namespace R51

@@ -1,9 +1,9 @@
 # See https://github.com/bxparks/EpoxyDuino for documentation about this
 # Makefile to compile and run Arduino programs natively on Linux or MacOS.
 
-APP_NAME := climate_state
+APP_NAME := climate
 ARDUINO_LIBS := AUnit ArduinoCanny ArduinoCaster ArduinoFaker \
-	ArduinoR51Core ArduinoR51Vehicle
+	ArduinoR51Core ArduinoR51Test ArduinoR51Vehicle
 EXTRA_CXXFLAGS += -g
 include ../../../EpoxyDuino/EpoxyDuino.mk
 

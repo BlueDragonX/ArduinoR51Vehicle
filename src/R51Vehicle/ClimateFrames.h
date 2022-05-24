@@ -1,9 +1,8 @@
-#ifndef _R51_VEHICLE_CLIMATE_CONTROL_H_
-#define _R51_VEHICLE_CLIMATE_CONTROL_H_
+#ifndef _R51_VEHICLE_CLIMATE_FRAMES_H_
+#define _R51_VEHICLE_CLIMATE_FRAMES_H_
 
 #include <Arduino.h>
 #include <Canny.h>
-#include "Controller.h"
 
 namespace R51 {
 
@@ -14,18 +13,11 @@ namespace R51 {
 //
 // The control frame starts in an init state. It must sends the init frame a
 // few times before becoming ready.
-class ClimateSystemControl : public Controller {
+class ClimateSystemControlFrame : public Canny::Frame {
     public:
         // Construct a climate system control object. If ready is true then the
         // control frame will immediately be placed into the ready state.
-        ClimateSystemControl(bool ready=false);
-
-        // Return true if the frame is available to be sent. Returns true if
-        // called after construction. Cleared after a call to frame().
-        bool available() override { return available_; }
-
-        // Return a reference to the control frame.
-        const Canny::Frame& frame() override;
+        ClimateSystemControlFrame(bool ready=false);
 
         // Place the control frame into the ready state. This is a noop if
         // ready() was already called.
@@ -74,9 +66,6 @@ class ClimateSystemControl : public Controller {
         // be sent while the climate control system is in the off state. 
         // This is a noop until ready() is called.
         void decPassengerTemp();
-    private:
-        Canny::Frame frame_;
-        bool available_;
 };
 
 // Manages changes to the 0x541 CAN frame for controlling climate fan speed and
@@ -86,18 +75,11 @@ class ClimateSystemControl : public Controller {
 //
 // The control frame starts in an init state. It must sends the init frame a
 // few times before becoming ready.
-class ClimateFanControl : public Controller {
+class ClimateFanControlFrame : public Canny::Frame {
     public:
         // Construct a climate fan control object. If ready is true then the
         // control frame will immediately be placed into the ready state.
-        ClimateFanControl(bool ready=false);
-
-        // Return true if the frame is available to be sent. Returns true if
-        // called after construction. Cleared after a call to frame().
-        bool available() override { return available_; }
-
-        // Return a reference to the control frame.
-        const Canny::Frame& frame() override;
+        ClimateFanControlFrame(bool ready=false);
 
         // Place the control frame into the ready state. This is a noop if
         // ready() was already called.
@@ -114,11 +96,8 @@ class ClimateFanControl : public Controller {
         // Decrease fan speed.
         // This is a noop until ready() is called.
         void decFanSpeed();
-    private:
-        Canny::Frame frame_;
-        bool available_;
 };
 
 }  // namespace R51
 
-#endif  // _R51_VEHICLE_CLIMATE_CONTROL_H_
+#endif  // _R51_VEHICLE_CLIMATE_FRAMES_H_
